@@ -78,6 +78,18 @@
       <main class="px-5 mt-4 space-y-5" id="calendar-content"></main>
     </div>
 
+    <!-- ============ TRENDS ============ -->
+    <div id="view-trends" class="hidden">
+      <main class="px-5 mt-2 space-y-5">
+        <div>
+          <p class="text-[11px] font-black tracking-[0.25em] text-[#2e3a5c]">PROGRESS</p>
+          <h2 class="text-2xl font-black tracking-tight mt-1">Big3 推定1RMの推移</h2>
+          <p class="text-xs text-neutral-500 mt-1.5">その日の最良セットから算出した推定1RMの移り変わりです。</p>
+        </div>
+        <div id="trends-list" class="space-y-5"></div>
+      </main>
+    </div>
+
     <!-- ============ RECORD ============ -->
     <div id="view-record" class="hidden">
       <header class="sticky top-0 z-20 bg-[#f6f5f1]/85 backdrop-blur-xl border-b border-neutral-900/[0.07] px-4 py-3 flex items-center justify-between">
@@ -119,19 +131,20 @@
 
     <!-- ============ DOCK NAV ============ -->
     <nav class="fixed bottom-3 left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[27rem] bg-white/85 backdrop-blur-xl border border-neutral-900/[0.09] rounded-[1.75rem] shadow-[0_18px_40px_-16px_rgba(24,24,32,0.30)] pt-2 px-3 z-40" style="margin-bottom: env(safe-area-inset-bottom)">
-      <div class="w-full flex justify-between items-center pb-2">
-        <button onclick="changeView('HOME')" id="tab-HOME" class="flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95 w-16">
+      <div class="w-full flex justify-between items-end pb-2 gap-1">
+        <button onclick="changeView('HOME')" id="tab-HOME" class="flex-1 flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95">
           <i data-lucide="home" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">ホーム</span>
         </button>
-        <button onclick="changeView('CALENDAR')" id="tab-CALENDAR" class="flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95 w-16">
+        <button onclick="changeView('CALENDAR')" id="tab-CALENDAR" class="flex-1 flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95">
           <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">カレンダー</span>
         </button>
-        <div class="relative w-16 flex justify-center">
-          <button onclick="openRecordView()" class="absolute bottom-2 bg-neutral-900 text-white w-14 h-14 rounded-full shadow-[0_12px_26px_-8px_rgba(24,24,32,0.4)] flex items-center justify-center active:scale-90 transition-all border-4 border-[#f6f5f1]">
-            <i data-lucide="plus" class="w-6 h-6"></i>
-          </button>
-        </div>
-        <button onclick="changeView('SETTINGS')" id="tab-SETTINGS" class="flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95 w-16">
+        <button onclick="openRecordView()" id="tab-RECORD" class="flex-1 flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95">
+          <span class="w-6 h-6 mb-1 rounded-full bg-neutral-900 text-white flex items-center justify-center"><i data-lucide="plus" class="w-4 h-4"></i></span><span class="text-[10px] font-black">記録</span>
+        </button>
+        <button onclick="changeView('TRENDS')" id="tab-TRENDS" class="flex-1 flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95">
+          <i data-lucide="trending-up" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">推移</span>
+        </button>
+        <button onclick="changeView('SETTINGS')" id="tab-SETTINGS" class="flex-1 flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95">
           <i data-lucide="settings" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">設定</span>
         </button>
       </div>
@@ -302,11 +315,11 @@
     // ===== Navigation =====
     function changeView(view) {
       currentView = view;
-      ['HOME', 'CALENDAR', 'RECORD', 'SETTINGS'].forEach(v => {
+      ['HOME', 'CALENDAR', 'RECORD', 'TRENDS', 'SETTINGS'].forEach(v => {
         const el = document.getElementById(`view-${v.toLowerCase()}`);
         if (el) el.classList.toggle('hidden', v !== currentView);
       });
-      ['HOME', 'CALENDAR', 'SETTINGS'].forEach(tab => {
+      ['HOME', 'CALENDAR', 'RECORD', 'TRENDS', 'SETTINGS'].forEach(tab => {
         const el = document.getElementById(`tab-${tab}`);
         if (el) {
           const active = tab === currentView;
@@ -328,6 +341,7 @@
       if (currentView === 'HOME') renderHome();
       else if (currentView === 'CALENDAR') renderCalendar();
       else if (currentView === 'RECORD') renderRecord();
+      else if (currentView === 'TRENDS') renderTrends();
       lucide.createIcons();
     }
 
@@ -536,6 +550,66 @@
       currentCalendarMonth = new Date(); currentCalendarMonth.setDate(1);
       renderCalendar(); lucide.createIcons();
     }
+
+// ===== TRENDS =====
+const LIFTS = [
+  { name: 'スクワット', short: 'SQ', color: '#2e3a5c' },
+  { name: 'ベンチプレス', short: 'BP', color: '#a85b32' },
+  { name: 'デッドリフト', short: 'DL', color: '#6b7c5e' }
+];
+function liftSeries(name) {
+  const byDate = {};
+  logs.forEach(log => {
+    (log.exercises || []).filter(ex => ex.name === name).forEach(ex => {
+      (ex.sets || []).forEach(s => {
+        const v = calculate1RM(s.weight, s.reps);
+        if (v > 0) byDate[log.date] = Math.max(byDate[log.date] || 0, v);
+      });
+    });
+  });
+  return Object.keys(byDate).sort().map(d => ({ date: d, value: byDate[d] }));
+}
+function liftChart(series, color) {
+  const W = 320, H = 118, P = 16;
+  const vals = series.map(p => p.value);
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (min === max) { min -= 5; max += 5; }
+  const padV = (max - min) * 0.18; min -= padV; max += padV;
+  const x = i => series.length === 1 ? W / 2 : P + (W - 2 * P) * (i / (series.length - 1));
+  const y = v => H - P - (H - 2 * P) * ((v - min) / (max - min));
+  const pts = series.map((p, i) => x(i).toFixed(1) + ',' + y(p.value).toFixed(1)).join(' ');
+  const line = series.length > 1
+    ? '<polygon points="' + P + ',' + (H - P) + ' ' + pts + ' ' + x(series.length - 1).toFixed(1) + ',' + (H - P) + '" fill="' + color + '" opacity="0.07"/><polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '';
+  const dots = series.map((p, i) => {
+    const last = i === series.length - 1;
+    return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="' + (last ? 4.5 : 3) + '" fill="' + (last ? color : '#ffffff') + '" stroke="' + color + '" stroke-width="2"/>';
+  }).join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="w-full">' + line + dots + '</svg>';
+}
+function renderTrends() {
+  const md = d => d.slice(5).replace('-', '/');
+  document.getElementById('trends-list').innerHTML = LIFTS.map(lift => {
+    const series = liftSeries(lift.name);
+    const head = '<div class="flex items-center gap-2.5 mb-1"><span class="text-[10px] font-black tracking-widest text-white px-2 py-1 rounded-md" style="background:' + lift.color + '">' + lift.short + '</span><h3 class="font-black">' + lift.name + '</h3></div>';
+    if (!series.length) {
+      return '<section class="glass rounded-[1.75rem] p-5">' + head + '<p class="text-sm text-neutral-400 mt-3">まだ記録がありません。</p></section>';
+    }
+    const cur = series[series.length - 1];
+    const best = Math.max(...series.map(p => p.value));
+    const delta = series.length > 1 ? cur.value - series[0].value : 0;
+    const deltaHtml = series.length > 1
+      ? '<span class="text-xs font-black ' + (delta > 0 ? 'text-emerald-600' : delta < 0 ? 'text-red-500' : 'text-neutral-400') + '">' + (delta > 0 ? '+' : '') + delta + 'kg（初回比）</span>'
+      : '<span class="text-xs font-bold text-neutral-400">記録はまだ1回だけです</span>';
+    return '<section class="glass rounded-[1.75rem] p-5">' + head +
+      '<div class="flex items-end justify-between mt-2"><div><span class="text-4xl font-black tracking-tight">' + cur.value + '</span><span class="text-sm font-bold text-neutral-400 ml-1">kg</span><p class="text-[11px] font-bold text-neutral-400 mt-0.5">直近 ' + md(cur.date) + '</p></div>' +
+      '<div class="text-right"><p class="text-[11px] font-bold text-neutral-400">最高</p><p class="text-lg font-black">' + best + '<span class="text-xs text-neutral-400 ml-0.5">kg</span></p>' + deltaHtml + '</div></div>' +
+      liftChart(series, lift.color) +
+      '<div class="flex justify-between text-[10px] font-bold text-neutral-400 -mt-1"><span>' + md(series[0].date) + '</span><span>' + md(cur.date) + '</span></div>' +
+      '</section>';
+  }).join('');
+  lucide.createIcons();
+}
 
 // ===== RECORD =====
 const createEmptySet = () => ({ id: generateUUID(), weight: '', reps: '', memo: ''});
