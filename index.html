@@ -642,6 +642,32 @@ const isCustom = currentName &&!EXERCISE_LIBRARY.includes(currentName);
 return opts + `<option value="${CUSTOM_OPTION}" ${isCustom? 'selected': ''}>カスタム（自由入力）</option>`;
 }
 
+const BIG3_NAMES = ['スクワット', 'ベンチプレス', 'デッドリフト'];
+function liftMax1RM(name) {
+let max = 0;
+logs.forEach(log => (log.exercises || []).filter(e => e.name === name).forEach(e => (e.sets || []).forEach(s => { max = Math.max(max, calculate1RM(s.weight, s.reps)); })));
+return max;
+}
+function roundToPlate(w) { return Math.max(20, Math.round(w / 2.5) * 2.5); }
+function templateSetsFor(name) {
+if (!BIG3_NAMES.includes(name)) return null;
+const max = liftMax1RM(name);
+if (!max) return null;
+const mk = (pct, reps, memo) => ({ id: generateUUID(), weight: roundToPlate(max * pct), reps, memo });
+return [
+mk(0.40, 5, 'アップ'), mk(0.60, 3, 'アップ'), mk(0.75, 2, 'アップ'), mk(0.85, 1, 'アップ'),
+mk(0.875, 3, 'メイン'), mk(0.875, 3, 'メイン'), mk(0.875, 3, 'メイン'), mk(0.875, 3, 'メイン')
+];
+}
+function applyTemplate(exId) {
+const ex = exercises.find(e => e.id === exId);
+if (!ex) return;
+const sets = templateSetsFor(ex.name);
+if (!sets) { openMessageModal('自動入力できません', 'この種目の推定1RMの記録がまだないため、テンプレートを計算できません。', 'error'); return; }
+ex.sets = sets;
+renderRecord();
+lucide.createIcons();
+}
 function setsFromHistory(name) {
 const prev = lastSetFor(name);
 if (prev) return prev.ex.sets.map(s => ({ id: generateUUID(), weight: s.weight, reps: s.reps, memo: ''}));
@@ -656,7 +682,7 @@ if (name === CUSTOM_OPTION) {
 name = (document.getElementById('add-exercise-custom').value || '').trim();
 if (!name) { openMessageModal('入力エラー', '種目名を入力してください。', 'error'); return;}
 }
-exercises.push({ id: generateUUID(), name, sets: setsFromHistory(name)});
+exercises.push({ id: generateUUID(), name, sets: templateSetsFor(name) || setsFromHistory(name)});
 renderRecord();
 lucide.createIcons();
 }
@@ -694,6 +720,7 @@ html += `
 <select data-ex-id="${ex.id}" class="ex-name-select w-full p-2.5 pr-9 bg-white border border-neutral-900/[0.09] rounded-xl font-black focus:ring-2 focus:ring-[#2e3a5c]/40" style="${selectStyle}">${exerciseOptionsHtml(ex.name)}</select>
 ${isCustom? `<input type="text" placeholder="種目名を入力" data-ex-id="${ex.id}" value="${escapeHtml(ex.name)}" class="ex-name-custom w-full mt-2 p-2.5 bg-white border border-neutral-900/[0.09] rounded-xl font-bold focus:ring-2 focus:ring-[#2e3a5c]/40" />`: ''}
 </div>
+${BIG3_NAMES.includes(ex.name) ? `<button onclick="applyTemplate('${ex.id}')" class="flex items-center gap-1 text-[11px] font-black text-[#2e3a5c] bg-[#2e3a5c]/[0.07] hover:bg-[#2e3a5c]/[0.12] px-2.5 py-2 rounded-full shrink-0 transition-all active:scale-95"><i data-lucide="calculator" class="w-4 h-4"></i>自動入力</button>` : ''}
 <button onclick="removeExercise('${ex.id}')" class="p-2 text-red-400 hover:bg-neutral-900/[0.05] rounded-full shrink-0"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
 </div>
 <div class="space-y-2">
@@ -715,7 +742,7 @@ ${EXERCISE_LIBRARY.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</
 </select>
 <input type="text" id="add-exercise-custom" placeholder="種目名を入力" class="hidden w-full p-3 bg-white border border-neutral-900/[0.09] rounded-xl font-bold focus:ring-2 focus:ring-[#2e3a5c]/40" />
 <button onclick="addExerciseFromPicker()" class="w-full py-3.5 bg-neutral-900 text-white font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i> この種目を追加</button>
-<p class="text-[11px] text-neutral-500">過去に記録した種目は、前回のセット構成を引き継ぎます。</p>
+<p class="text-[11px] text-neutral-500">Big3（スクワット／ベンチプレス／デッドリフト）は、現在の推定1RMからアップとメインのテンプレートを自動入力します。それ以外の種目は前回のセット構成を引き継ぎます。</p>
 </div>
 
 <div class="rounded-[1.75rem] p-5 bg-white border border-neutral-900/[0.08] space-y-3">
@@ -872,7 +899,7 @@ if (e.target.matches('.ex-name-select')) {
 const ex = exercises.find(x => x.id === e.target.dataset.exId);
 if (!ex) return;
 if (e.target.value === CUSTOM_OPTION) { if (EXERCISE_LIBRARY.includes(ex.name)) ex.name = ''; renderRecord(); lucide.createIcons(); const inp = recordContent.querySelector(`.ex-name-custom[data-ex-id="${ex.id}"]`); if (inp) inp.focus();}
-else { ex.name = e.target.value; renderRecord(); lucide.createIcons();}
+else { ex.name = e.target.value; if (ex.sets.every(s => !parseFloat(s.weight) && !parseFloat(s.reps))) { const t = templateSetsFor(ex.name); if (t) ex.sets = t; } renderRecord(); lucide.createIcons();}
 } else if (e.target.matches('#record-date-input')) {
 recordDate = e.target.value;
 }
