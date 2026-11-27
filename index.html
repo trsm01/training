@@ -84,7 +84,7 @@
         <div>
           <p class="text-[11px] font-black tracking-[0.25em] text-[#2e3a5c]">PROGRESS</p>
           <h2 class="text-2xl font-black tracking-tight mt-1">Big3 推定1RMの推移</h2>
-          <p class="text-xs text-neutral-500 mt-1.5">その日の最良セットから算出した推定1RMの移り変わりです。</p>
+          <p class="text-xs text-neutral-500 mt-1.5">その日の最良セットから算出した推定1RMの移り変わりです。グラフの点をタップすると、その日の記録が開きます。</p>
         </div>
         <div id="trends-list" class="space-y-5"></div>
       </main>
@@ -585,7 +585,8 @@ function liftChart(series, color) {
     const last = i === series.length - 1;
     return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="' + (last ? 4.5 : 3) + '" fill="' + (last ? color : '#ffffff') + '" stroke="' + color + '" stroke-width="2"/>';
   }).join('');
-  return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="w-full">' + line + dots + '</svg>';
+  const hits = series.map((p, i) => '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="15" fill="transparent" style="cursor:pointer" onclick="jumpToDay(\'' + p.date + '\')"><title>' + p.date + ' の記録を開く</title></circle>').join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="w-full">' + line + dots + hits + '</svg>';
 }
 function renderTrends() {
   const md = d => d.slice(5).replace('-', '/');
