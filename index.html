@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>FORGE | トレーニングログ</title>
   <meta name="description" content="トレーニング記録アプリ FORGE。カレンダーで振り返り、種目を選んで重量・回数・セットを記録。クラスターセット法向けAIコーチプロンプト対応。">
-  <meta name="theme-color" content="#0b0b10">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%230b0b10'/%3E%3Ctext x='50' y='72' font-size='58' text-anchor='middle' fill='%23d9ff4a' font-family='sans-serif' font-weight='900'%3EF%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#f6f5f1">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232e3a5c'/%3E%3Ctext x='50' y='72' font-size='58' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-weight='900'%3EF%3C/text%3E%3C/svg%3E">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
   <style>
-    :root { --volt: #d9ff4a; }
+    :root { --accent: #2e3a5c; }
     html { scroll-behavior: smooth; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif;
       -webkit-tap-highlight-color: transparent;
       -webkit-font-smoothing: antialiased;
-      background: #0b0b10;
+      background: #f6f5f1;
     }
     button, input, select, textarea { touch-action: manipulation; }
     input[type=number], .tnum { font-variant-numeric: tabular-nums; }
@@ -25,20 +25,28 @@
     input, textarea, select { font-size: 16px !important; }
     select { -webkit-appearance: none; appearance: none; }
     .pb-dock { padding-bottom: calc(7.5rem + env(safe-area-inset-bottom)); }
-    @keyframes viewIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    .view-enter { animation: viewIn .3s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes viewIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .view-enter { animation: viewIn .45s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    .view-enter main > * { animation: riseIn .55s cubic-bezier(.22,1,.36,1) both; }
+    .view-enter main > *:nth-child(2) { animation-delay: .05s; }
+    .view-enter main > *:nth-child(3) { animation-delay: .1s; }
+    .view-enter main > *:nth-child(4) { animation-delay: .15s; }
+    .view-enter main > *:nth-child(5) { animation-delay: .2s; }
+    .view-enter main > *:nth-child(n+6) { animation-delay: .25s; }
+    button { transition: transform .16s ease, background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease; }
     @keyframes sheetIn { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-    [id$="-modal"] > div { animation: sheetIn .24s cubic-bezier(.22,1,.36,1) both; }
-    .volt-grad { background: linear-gradient(120deg, #eaff8a, #d9ff4a 45%, #9fe870); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .glass { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
-    .cal-has { background: rgba(217,255,74,.14); }
-    .cal-has-strong { background: rgba(217,255,74,.30); }
-    .cal-selected { background: var(--volt) !important; color: #0b0b10 !important; box-shadow: 0 8px 22px -8px rgba(217,255,74,.65); }
-    .cal-selected .cal-vol { color: rgba(11,11,16,.6) !important; }
-    ::selection { background: rgba(217,255,74,.35); }
+    [id$="-modal"] > div { animation: sheetIn .34s cubic-bezier(.22,1,.36,1) both; }
+    .volt-grad { color: #2e3a5c; }
+    .glass { background: #ffffff; border: 1px solid rgba(24,24,32,.08); box-shadow: 0 1px 3px rgba(24,24,32,.04); }
+    .cal-has { background: rgba(46,58,92,.07); }
+    .cal-has-strong { background: rgba(46,58,92,.16); }
+    .cal-selected { background: var(--accent) !important; color: #ffffff !important; box-shadow: 0 8px 20px -8px rgba(46,58,92,.45); }
+    .cal-selected .cal-vol { color: rgba(255,255,255,.75) !important; }
+    ::selection { background: rgba(46,58,92,.16); }
   </style>
 </head>
-<body class="text-neutral-100 antialiased">
+<body class="text-neutral-900 antialiased">
 
   <div id="app" class="min-h-screen pb-dock relative max-w-2xl mx-auto w-full">
 
@@ -46,13 +54,13 @@
     <div id="view-home" class="hidden">
       <header class="px-5 pt-10 pb-2 flex items-end justify-between">
         <div>
-          <div class="text-[11px] font-black tracking-[0.35em] text-[#d9ff4a]">FORGE.</div>
+          <div class="text-[11px] font-black tracking-[0.35em] text-[#2e3a5c]">FORGE.</div>
           <h1 class="text-3xl font-black tracking-tight mt-1">トレーニング<span class="volt-grad">ログ</span></h1>
         </div>
-        <div id="home-date" class="text-right text-xs font-bold text-neutral-400 leading-relaxed"></div>
+        <div id="home-date" class="text-right text-xs font-bold text-neutral-500 leading-relaxed"></div>
       </header>
       <main class="px-5 mt-4 space-y-5">
-        <button onclick="openRecordView()" class="w-full py-4 rounded-3xl bg-[#d9ff4a] text-[#0b0b10] font-black text-base shadow-[0_14px_36px_-10px_rgba(217,255,74,0.55)] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+        <button onclick="openRecordView()" class="w-full py-4 rounded-3xl bg-neutral-900 text-white font-black text-base shadow-[0_14px_30px_-12px_rgba(24,24,32,0.35)] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
           <i data-lucide="plus" class="w-5 h-5"></i> 今日のトレーニングを記録
         </button>
         <div id="home-pr"></div>
@@ -64,7 +72,7 @@
     <!-- ============ CALENDAR ============ -->
     <div id="view-calendar" class="hidden">
       <header class="px-5 pt-10 pb-2">
-        <div class="text-[11px] font-black tracking-[0.35em] text-[#d9ff4a]">REVIEW</div>
+        <div class="text-[11px] font-black tracking-[0.35em] text-[#2e3a5c]">REVIEW</div>
         <h1 class="text-3xl font-black tracking-tight mt-1">カレンダー</h1>
       </header>
       <main class="px-5 mt-4 space-y-5" id="calendar-content"></main>
@@ -72,12 +80,12 @@
 
     <!-- ============ RECORD ============ -->
     <div id="view-record" class="hidden">
-      <header class="sticky top-0 z-20 bg-[#0b0b10]/85 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 flex items-center justify-between">
-        <button onclick="changeView('HOME')" class="p-2 -ml-1 rounded-full hover:bg-white/[0.06] transition-colors" aria-label="閉じる">
+      <header class="sticky top-0 z-20 bg-[#f6f5f1]/85 backdrop-blur-xl border-b border-neutral-900/[0.07] px-4 py-3 flex items-center justify-between">
+        <button onclick="changeView('HOME')" class="p-2 -ml-1 rounded-full hover:bg-neutral-900/[0.05] transition-colors" aria-label="閉じる">
           <i data-lucide="x" class="w-6 h-6"></i>
         </button>
         <h1 id="record-view-title" class="text-base font-black">記録する</h1>
-        <button onclick="saveLog()" class="bg-[#d9ff4a] text-[#0b0b10] text-sm font-black py-2 px-4 rounded-full shadow-[0_8px_22px_-8px_rgba(217,255,74,0.7)] active:scale-95 transition-all flex items-center gap-1">
+        <button onclick="saveLog()" class="bg-neutral-900 text-white text-sm font-black py-2 px-4 rounded-full shadow-[0_8px_20px_-8px_rgba(24,24,32,0.35)] active:scale-95 transition-all flex items-center gap-1">
           <i data-lucide="check" class="w-4 h-4"></i> 保存
         </button>
       </header>
@@ -87,30 +95,30 @@
     <!-- ============ SETTINGS ============ -->
     <div id="view-settings" class="hidden">
       <header class="px-5 pt-10 pb-2">
-        <div class="text-[11px] font-black tracking-[0.35em] text-[#d9ff4a]">DATA</div>
+        <div class="text-[11px] font-black tracking-[0.35em] text-[#2e3a5c]">DATA</div>
         <h1 class="text-3xl font-black tracking-tight mt-1">設定・データ</h1>
       </header>
       <main class="px-5 mt-4 space-y-5">
         <section class="glass rounded-[1.75rem] p-5">
-          <div class="flex items-center gap-2 font-black mb-1"><i data-lucide="download" class="w-5 h-5 text-[#d9ff4a]"></i> バックアップ</div>
+          <div class="flex items-center gap-2 font-black mb-1"><i data-lucide="download" class="w-5 h-5 text-[#2e3a5c]"></i> バックアップ</div>
           <p class="text-sm text-neutral-400 mb-4 leading-relaxed">記録と予定を書き出します。端末を変える前に保存してください。</p>
           <div class="grid grid-cols-2 gap-3">
-            <button onclick="exportData('copy')" class="py-3.5 bg-white/[0.06] hover:bg-white/[0.1] font-bold rounded-2xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 border border-white/[0.08]"><i data-lucide="copy" class="w-4 h-4"></i> コピー</button>
-            <button onclick="exportData('file')" class="py-3.5 bg-white/[0.06] hover:bg-white/[0.1] font-bold rounded-2xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 border border-white/[0.08]"><i data-lucide="file-down" class="w-4 h-4"></i> ファイル</button>
+            <button onclick="exportData('copy')" class="py-3.5 bg-neutral-900/[0.05] hover:bg-neutral-900/[0.07] font-bold rounded-2xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 border border-neutral-900/[0.09]"><i data-lucide="copy" class="w-4 h-4"></i> コピー</button>
+            <button onclick="exportData('file')" class="py-3.5 bg-neutral-900/[0.05] hover:bg-neutral-900/[0.07] font-bold rounded-2xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 border border-neutral-900/[0.09]"><i data-lucide="file-down" class="w-4 h-4"></i> ファイル</button>
           </div>
         </section>
         <section class="glass rounded-[1.75rem] p-5">
-          <div class="flex items-center gap-2 font-black mb-1"><i data-lucide="upload" class="w-5 h-5 text-[#d9ff4a]"></i> 復元</div>
+          <div class="flex items-center gap-2 font-black mb-1"><i data-lucide="upload" class="w-5 h-5 text-[#2e3a5c]"></i> 復元</div>
           <p class="text-sm text-neutral-400 mb-4 leading-relaxed">バックアップ文字列を貼り付けて復元します。<span class="text-red-400 font-bold">現在のデータは上書きされます。</span></p>
-          <textarea id="import-textarea" rows="4" class="w-full p-3 bg-black/30 rounded-2xl border border-white/[0.08] focus:ring-2 focus:ring-[#d9ff4a]/60 text-sm text-neutral-300 font-mono mb-4" placeholder="ここに文字列をペースト..."></textarea>
-          <button onclick="importData()" class="w-full py-3.5 bg-[#d9ff4a] text-[#0b0b10] font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> 復元を実行する</button>
+          <textarea id="import-textarea" rows="4" class="w-full p-3 bg-white rounded-2xl border border-neutral-900/[0.09] focus:ring-2 focus:ring-[#2e3a5c]/40 text-sm text-neutral-700 font-mono mb-4" placeholder="ここに文字列をペースト..."></textarea>
+          <button onclick="importData()" class="w-full py-3.5 bg-neutral-900 text-white font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> 復元を実行する</button>
         </section>
         <p class="text-[11px] text-neutral-500 leading-relaxed px-1">データはこのブラウザの中（localStorage）に保存されます。サーバーには送信されません。</p>
       </main>
     </div>
 
     <!-- ============ DOCK NAV ============ -->
-    <nav class="fixed bottom-3 left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[27rem] bg-[#15151d]/90 backdrop-blur-xl border border-white/[0.08] rounded-[1.75rem] shadow-[0_18px_48px_-12px_rgba(0,0,0,0.8)] pt-2 px-3 z-40" style="margin-bottom: env(safe-area-inset-bottom)">
+    <nav class="fixed bottom-3 left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[27rem] bg-white/85 backdrop-blur-xl border border-neutral-900/[0.09] rounded-[1.75rem] shadow-[0_18px_40px_-16px_rgba(24,24,32,0.30)] pt-2 px-3 z-40" style="margin-bottom: env(safe-area-inset-bottom)">
       <div class="w-full flex justify-between items-center pb-2">
         <button onclick="changeView('HOME')" id="tab-HOME" class="flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95 w-16">
           <i data-lucide="home" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">ホーム</span>
@@ -119,7 +127,7 @@
           <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">カレンダー</span>
         </button>
         <div class="relative w-16 flex justify-center">
-          <button onclick="openRecordView()" class="absolute bottom-2 bg-[#d9ff4a] text-[#0b0b10] w-14 h-14 rounded-full shadow-[0_12px_30px_-6px_rgba(217,255,74,0.65)] flex items-center justify-center active:scale-90 transition-all border-4 border-[#0b0b10]">
+          <button onclick="openRecordView()" class="absolute bottom-2 bg-neutral-900 text-white w-14 h-14 rounded-full shadow-[0_12px_26px_-8px_rgba(24,24,32,0.4)] flex items-center justify-center active:scale-90 transition-all border-4 border-[#f6f5f1]">
             <i data-lucide="plus" class="w-6 h-6"></i>
           </button>
         </div>
@@ -131,40 +139,40 @@
 
     <!-- ============ MODALS ============ -->
     <div id="message-modal" class="fixed inset-0 bg-black/70 backdrop-blur-[2px] hidden flex items-end sm:items-center justify-center z-[60] p-4">
-      <div class="bg-[#17171f] border border-white/[0.08] p-6 rounded-[1.75rem] max-w-sm w-full shadow-2xl text-center">
+      <div class="bg-white border border-neutral-900/[0.09] p-6 rounded-[1.75rem] max-w-sm w-full shadow-2xl text-center">
         <div id="message-modal-icon" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"></div>
         <h3 id="message-modal-title" class="text-lg font-black mb-2"></h3>
         <p id="message-modal-text" class="text-neutral-400 text-sm mb-6 whitespace-pre-wrap leading-relaxed"></p>
-        <button onclick="closeMessageModal()" class="w-full py-3.5 bg-[#d9ff4a] font-black text-[#0b0b10] rounded-2xl active:scale-[0.98] transition-all">閉じる</button>
+        <button onclick="closeMessageModal()" class="w-full py-3.5 bg-neutral-900 font-black text-white rounded-2xl active:scale-[0.98] transition-all">閉じる</button>
       </div>
     </div>
 
     <div id="delete-modal" class="fixed inset-0 bg-black/70 backdrop-blur-[2px] hidden flex items-end sm:items-center justify-center z-[60] p-4">
-      <div class="bg-[#17171f] border border-white/[0.08] p-6 rounded-[1.75rem] max-w-sm w-full shadow-2xl">
+      <div class="bg-white border border-neutral-900/[0.09] p-6 rounded-[1.75rem] max-w-sm w-full shadow-2xl">
         <h3 class="text-lg font-black mb-2">削除しますか？</h3>
         <p class="text-neutral-400 text-sm mb-6">この操作は取り消せません。</p>
         <div class="flex gap-3">
-          <button onclick="closeDeleteModal()" class="flex-1 py-3.5 bg-white/[0.06] font-bold text-neutral-300 rounded-2xl active:scale-[0.97] transition-all">キャンセル</button>
+          <button onclick="closeDeleteModal()" class="flex-1 py-3.5 bg-neutral-900/[0.05] font-bold text-neutral-700 rounded-2xl active:scale-[0.97] transition-all">キャンセル</button>
           <button onclick="confirmDelete()" class="flex-1 py-3.5 bg-red-500 font-black text-white rounded-2xl active:scale-[0.97] transition-all">削除する</button>
         </div>
       </div>
     </div>
 
     <div id="phase-modal" class="fixed inset-0 bg-black/70 backdrop-blur-[2px] hidden flex items-end sm:items-center justify-center z-[60] p-4">
-      <div class="bg-[#17171f] border border-white/[0.08] p-6 rounded-[1.75rem] max-w-md w-full shadow-2xl">
-        <div class="flex items-center gap-2 mb-2 font-black text-lg"><i data-lucide="bot" class="w-6 h-6 text-[#d9ff4a]"></i> AIコーチに依頼</div>
+      <div class="bg-white border border-neutral-900/[0.09] p-6 rounded-[1.75rem] max-w-md w-full shadow-2xl">
+        <div class="flex items-center gap-2 mb-2 font-black text-lg"><i data-lucide="bot" class="w-6 h-6 text-[#2e3a5c]"></i> AIコーチに依頼</div>
         <p class="text-sm text-neutral-400 mb-4 leading-relaxed">現在のフェーズを選ぶと、クラスターセット法に沿った評価と次回提案のためのプロンプトをコピーします。</p>
         <div class="space-y-3">
-          <button onclick="generateAndCopyPrompt('筋肥大')" class="w-full text-left p-4 rounded-2xl border border-white/[0.08] hover:border-[#d9ff4a]/50 hover:bg-white/[0.05] transition-all flex flex-col gap-1">
+          <button onclick="generateAndCopyPrompt('筋肥大')" class="w-full text-left p-4 rounded-2xl border border-neutral-900/[0.09] hover:border-[#2e3a5c]/40 hover:bg-neutral-900/[0.04] transition-all flex flex-col gap-1">
             <span class="font-black text-base">筋肥大期</span>
             <span class="text-xs text-neutral-400">中重量・多レップのクラスター（目安：75〜85%1RM、1クラスター4〜6レップ、レップ間休息15〜30秒）</span>
           </button>
-          <button onclick="generateAndCopyPrompt('筋力')" class="w-full text-left p-4 rounded-2xl border border-white/[0.08] hover:border-[#d9ff4a]/50 hover:bg-white/[0.05] transition-all flex flex-col gap-1">
+          <button onclick="generateAndCopyPrompt('筋力')" class="w-full text-left p-4 rounded-2xl border border-neutral-900/[0.09] hover:border-[#2e3a5c]/40 hover:bg-neutral-900/[0.04] transition-all flex flex-col gap-1">
             <span class="font-black text-base">筋力期</span>
             <span class="text-xs text-neutral-400">高重量・少レップのクラスター（目安：85〜92.5%1RM、1クラスター2〜4レップ、レップ間休息20〜45秒）</span>
           </button>
         </div>
-        <button onclick="closePhaseModal()" class="w-full mt-4 py-3.5 bg-white/[0.06] font-bold text-neutral-300 rounded-2xl active:scale-[0.98] transition-all">キャンセル</button>
+        <button onclick="closePhaseModal()" class="w-full mt-4 py-3.5 bg-neutral-900/[0.05] font-bold text-neutral-700 rounded-2xl active:scale-[0.98] transition-all">キャンセル</button>
       </div>
     </div>
 
@@ -302,13 +310,16 @@
         const el = document.getElementById(`tab-${tab}`);
         if (el) {
           const active = tab === currentView;
-          el.classList.toggle('text-[#d9ff4a]', active);
-          el.classList.toggle('bg-white/[0.06]', active);
+          el.classList.toggle('text-[#2e3a5c]', active);
+          el.classList.toggle('bg-neutral-900/[0.05]', active);
           el.classList.toggle('text-neutral-500', !active);
         }
       });
       const currentEl = document.getElementById(`view-${currentView.toLowerCase()}`);
-      if (currentEl) { currentEl.classList.remove('view-enter'); void currentEl.offsetWidth; currentEl.classList.add('view-enter'); }
+      if (currentEl) {
+        currentEl.classList.remove('view-enter'); void currentEl.offsetWidth; currentEl.classList.add('view-enter');
+        setTimeout(() => currentEl.classList.remove('view-enter'), 750);
+      }
       renderApp();
       window.scrollTo(0, 0);
     }
@@ -327,7 +338,7 @@
         icon.className = 'w-12 h-12 rounded-full bg-red-500/15 text-red-400 flex items-center justify-center mx-auto mb-4';
         icon.innerHTML = '<i data-lucide="alert-circle" class="w-6 h-6"></i>';
       } else {
-        icon.className = 'w-12 h-12 rounded-full bg-[#d9ff4a]/15 text-[#d9ff4a] flex items-center justify-center mx-auto mb-4';
+        icon.className = 'w-12 h-12 rounded-full bg-[#2e3a5c]/10 text-[#2e3a5c] flex items-center justify-center mx-auto mb-4';
         icon.innerHTML = '<i data-lucide="check-circle-2" class="w-6 h-6"></i>';
       }
       document.getElementById('message-modal-title').textContent = title;
@@ -359,19 +370,19 @@
 
       const { bench, squat, dead, total } = getBig3Max();
       const prCard = (label, data) => `
-        <div class="rounded-3xl bg-black/25 border border-white/[0.06] p-3.5">
+        <div class="rounded-3xl bg-[#f7f6f2] border border-neutral-900/[0.07] p-3.5">
           <div class="text-[10px] font-black tracking-[0.2em] text-neutral-400">${label}</div>
           <div class="text-[1.4rem] leading-tight font-black tnum mt-0.5">${data.max}<span class="text-[11px] font-bold text-neutral-500 ml-1">kg</span></div>
           ${data.date ? `<div class="text-[10px] text-neutral-500 mt-1">${formatDate(data.date)}</div>` : '<div class="text-[10px] text-neutral-600 mt-1">—</div>'}
         </div>`;
       document.getElementById('home-pr').innerHTML = `
-        <section class="rounded-[1.75rem] p-5 bg-gradient-to-br from-[#1b1b26] via-[#14141d] to-[#10131a] border border-white/[0.07] shadow-[0_18px_44px_-18px_rgba(0,0,0,0.9)]">
+        <section class="rounded-[1.75rem] p-5 bg-white border border-neutral-900/[0.08] shadow-[0_10px_30px_-18px_rgba(24,24,32,0.25)]">
           <div class="flex items-end justify-between mb-4">
             <div>
               <div class="text-[10px] font-black tracking-[0.3em] text-neutral-400">BIG3 推定1RM</div>
               <div class="text-4xl font-black tnum mt-1">${total}<span class="text-sm font-bold text-neutral-400 ml-1">kg 合計</span></div>
             </div>
-            <i data-lucide="trophy" class="w-7 h-7 text-[#d9ff4a]"></i>
+            <i data-lucide="trophy" class="w-7 h-7 text-[#2e3a5c]"></i>
           </div>
           <div class="grid grid-cols-3 gap-2.5">${prCard('BENCH', bench)}${prCard('SQUAT', squat)}${prCard('DEADLIFT', dead)}</div>
         </section>`;
@@ -385,7 +396,7 @@
           const h = Math.max(6, Math.round(v / maxVol * 100));
           const isToday = log.date === getLocalDateStr();
           return `<div class="flex-1 flex flex-col items-center gap-1.5 min-w-0">
-            <div class="w-full flex items-end h-20"><div class="w-full rounded-t-lg ${isToday ? 'bg-[#d9ff4a]' : 'bg-white/[0.18]'}" style="height:${h}%"></div></div>
+            <div class="w-full flex items-end h-20"><div class="w-full rounded-t-lg ${isToday ? 'bg-[#2e3a5c]' : 'bg-neutral-900/[0.14]'}" style="height:${h}%"></div></div>
             <div class="text-[9px] font-bold text-neutral-500">${log.date.slice(5).replace('-', '/')}</div>
           </div>`;
         }).join('');
@@ -437,12 +448,12 @@
       let html = `
         <section class="glass rounded-[1.75rem] p-4 sm:p-5">
           <div class="flex items-center justify-between mb-4">
-            <button onclick="moveMonth(-1)" class="p-2 rounded-full hover:bg-white/[0.06] transition-colors"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+            <button onclick="moveMonth(-1)" class="p-2 rounded-full hover:bg-neutral-900/[0.05] transition-colors"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
             <div class="flex items-center gap-3">
               <h2 class="text-lg font-black">${year}年 ${month + 1}月</h2>
-              <button onclick="backToToday()" class="text-[11px] font-black text-[#0b0b10] bg-[#d9ff4a] px-2.5 py-1 rounded-full active:scale-95 transition-all">今日</button>
+              <button onclick="backToToday()" class="text-[11px] font-black text-white bg-neutral-900 px-2.5 py-1 rounded-full active:scale-95 transition-all">今日</button>
             </div>
-            <button onclick="moveMonth(1)" class="p-2 rounded-full hover:bg-white/[0.06] transition-colors"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+            <button onclick="moveMonth(1)" class="p-2 rounded-full hover:bg-neutral-900/[0.05] transition-colors"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
           </div>
           <div class="grid grid-cols-7 gap-1 text-center mb-1.5">
             ${WEEKDAYS.map((d, i) => `<div class="text-[10px] font-black ${i === 0 ? 'text-red-400' : i === 6 ? 'text-sky-400' : 'text-neutral-500'}">${d}</div>`).join('')}
@@ -457,12 +468,12 @@
         let cls = 'relative p-1.5 min-h-[3.3rem] rounded-2xl flex flex-col items-center justify-start cursor-pointer transition-all active:scale-95 ';
         if (dStr === selectedCalendarDate) cls += 'cal-selected ';
         else if (vol > 0) cls += (vol / maxVol >= 0.6 ? 'cal-has-strong ' : 'cal-has ');
-        else cls += 'hover:bg-white/[0.05] ';
-        if (dStr === todayStr && dStr !== selectedCalendarDate) cls += 'ring-1 ring-[#d9ff4a]/70 ';
+        else cls += 'hover:bg-neutral-900/[0.04] ';
+        if (dStr === todayStr && dStr !== selectedCalendarDate) cls += 'ring-1 ring-[#2e3a5c]/50 ';
         html += `
           <div class="${cls}" onclick="selectedCalendarDate='${dStr}'; renderCalendar(); lucide.createIcons();">
             <span class="text-sm font-bold leading-tight">${d}</span>
-            ${vol > 0 ? `<span class="cal-vol text-[8.5px] font-bold text-[#d9ff4a]/80 tnum mt-0.5">${Math.round(vol / 100) / 10}t</span>` : ''}
+            ${vol > 0 ? `<span class="cal-vol text-[8.5px] font-bold text-[#2e3a5c]/75 tnum mt-0.5">${Math.round(vol / 100) / 10}t</span>` : ''}
             ${hasSch ? '<span class="absolute bottom-1.5 w-1 h-1 rounded-full bg-sky-400"></span>' : ''}
           </div>`;
       }
@@ -474,7 +485,7 @@
       html += `<section>
         <div class="flex items-center justify-between mb-3 px-1">
           <h3 class="font-black">${prettyDate(selectedCalendarDate)} の記録</h3>
-          <button onclick="openRecordView('${selectedCalendarDate}')" class="text-[11px] font-black text-[#0b0b10] bg-[#d9ff4a] px-3 py-1.5 rounded-full active:scale-95 transition-all flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> 記録する</button>
+          <button onclick="openRecordView('${selectedCalendarDate}')" class="text-[11px] font-black text-white bg-neutral-900 px-3 py-1.5 rounded-full active:scale-95 transition-all flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> 記録する</button>
         </div>`;
       if (!dayLogs.length && !daySchs.length) {
         html += '<div class="glass rounded-3xl p-6 text-center text-sm text-neutral-500">この日の記録はありません</div>';
@@ -495,21 +506,21 @@
             </div>
             <div class="space-y-1">
               ${ex.sets.map((s, i) => `
-                <div class="flex items-center gap-3 text-sm text-neutral-300 pl-2 border-l-2 border-white/[0.08]">
+                <div class="flex items-center gap-3 text-sm text-neutral-700 pl-2 border-l-2 border-neutral-900/[0.09]">
                   <span class="w-4 text-[10px] text-neutral-500 text-center tnum">${i + 1}</span>
                   <span class="font-bold tnum">${escapeHtml(s.weight)}kg <span class="font-normal text-xs text-neutral-500">×</span> ${escapeHtml(s.reps)}</span>
                   <span class="text-[10px] font-bold text-neutral-500">1RM ${calculate1RM(s.weight, s.reps) || '—'}</span>
-                  ${s.memo ? `<span class="text-[10px] bg-white/[0.06] px-2 py-0.5 rounded-md text-neutral-400 truncate max-w-[130px]">${escapeHtml(s.memo)}</span>` : ''}
+                  ${s.memo ? `<span class="text-[10px] bg-neutral-900/[0.05] px-2 py-0.5 rounded-md text-neutral-400 truncate max-w-[130px]">${escapeHtml(s.memo)}</span>` : ''}
                 </div>`).join('')}
             </div>
-          </div>`).join('<div class="border-t border-white/[0.05] my-3.5"></div>');
+          </div>`).join('<div class="border-t border-neutral-900/[0.06] my-3.5"></div>');
         html += `
           <div class="glass rounded-[1.75rem] p-5 mb-2.5">
             <div class="flex items-center justify-between mb-3">
               <span class="text-[11px] font-bold text-neutral-400 tnum">総ボリューム ${sessionVolume(log).toLocaleString()} kg</span>
               <div class="flex items-center gap-1">
-                <button onclick="editLog('${log.id}')" class="p-2 text-[#d9ff4a] hover:bg-white/[0.06] rounded-xl transition-colors"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                <button onclick="openDeleteModal('${log.id}', 'log')" class="p-2 text-red-400 hover:bg-white/[0.06] rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                <button onclick="editLog('${log.id}')" class="p-2 text-[#2e3a5c] hover:bg-neutral-900/[0.05] rounded-xl transition-colors"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                <button onclick="openDeleteModal('${log.id}', 'log')" class="p-2 text-red-400 hover:bg-neutral-900/[0.05] rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
               </div>
             </div>
             <div>${exHtml}</div>
@@ -587,28 +598,28 @@ const selectStyle = `background-image:url("data:image/svg+xml,%3Csvg xmlns='http
 let html = `
 <div class="glass rounded-3xl p-4 flex items-center justify-between">
 <label class="text-sm font-bold text-neutral-400">日付</label>
-<input type="date" id="record-date-input" value="${escapeHtml(recordDate)}" class="p-2.5 bg-black/30 rounded-xl border border-white/[0.08] font-black focus:ring-2 focus:ring-[#d9ff4a]/60 [color-scheme:dark]" />
+<input type="date" id="record-date-input" value="${escapeHtml(recordDate)}" class="p-2.5 bg-white rounded-xl border border-neutral-900/[0.09] font-black focus:ring-2 focus:ring-[#2e3a5c]/40 [color-scheme:light]" />
 </div>`;
 
 exercises.forEach(ex => {
 const isCustom = ex.name &&!EXERCISE_LIBRARY.includes(ex.name);
 const setsHtml = ex.sets.map((set, i) => `
-<div class="flex items-center gap-2 bg-black/25 p-2 rounded-2xl border border-white/[0.05]">
+<div class="flex items-center gap-2 bg-[#f7f6f2] p-2 rounded-2xl border border-neutral-900/[0.06]">
 <div class="w-6 text-center font-black text-neutral-500 text-sm tnum shrink-0">${i + 1}</div>
-<input type="number" inputmode="decimal" placeholder="kg" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="weight" value="${escapeHtml(set.weight)}" class="update-set w-[4.2rem] sm:w-20 p-2.5 text-center font-black bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-[#d9ff4a]/60 shrink-0" />
-<input type="number" inputmode="numeric" placeholder="回" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="reps" value="${escapeHtml(set.reps)}" class="update-set w-[3.6rem] sm:w-[4.5rem] p-2.5 text-center font-black bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-[#d9ff4a]/60 shrink-0" />
-<div id="1rm-${set.id}" class="w-11 text-center font-black text-[#d9ff4a] shrink-0 text-xs tnum">${calculate1RM(set.weight, set.reps) || '—'}</div>
-<input type="text" placeholder="メモ" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="memo" value="${escapeHtml(set.memo)}" class="update-set flex-1 p-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-[#d9ff4a]/60 text-sm min-w-[52px]" />
+<input type="number" inputmode="decimal" placeholder="kg" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="weight" value="${escapeHtml(set.weight)}" class="update-set w-[4.2rem] sm:w-20 p-2.5 text-center font-black bg-neutral-900/[0.04] border border-neutral-900/[0.09] rounded-xl focus:ring-2 focus:ring-[#2e3a5c]/40 shrink-0" />
+<input type="number" inputmode="numeric" placeholder="回" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="reps" value="${escapeHtml(set.reps)}" class="update-set w-[3.6rem] sm:w-[4.5rem] p-2.5 text-center font-black bg-neutral-900/[0.04] border border-neutral-900/[0.09] rounded-xl focus:ring-2 focus:ring-[#2e3a5c]/40 shrink-0" />
+<div id="1rm-${set.id}" class="w-11 text-center font-black text-[#2e3a5c] shrink-0 text-xs tnum">${calculate1RM(set.weight, set.reps) || '—'}</div>
+<input type="text" placeholder="メモ" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="memo" value="${escapeHtml(set.memo)}" class="update-set flex-1 p-2.5 bg-neutral-900/[0.04] border border-neutral-900/[0.09] rounded-xl focus:ring-2 focus:ring-[#2e3a5c]/40 text-sm min-w-[52px]" />
 <button onclick="removeSet('${ex.id}', '${set.id}')" class="p-1 text-neutral-500 hover:text-red-400 shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
 </div>`).join('');
 html += `
 <div class="glass rounded-[1.75rem] p-4 sm:p-5 space-y-3.5">
 <div class="flex items-center gap-2">
 <div class="flex-1 min-w-0">
-<select data-ex-id="${ex.id}" class="ex-name-select w-full p-2.5 pr-9 bg-black/30 border border-white/[0.08] rounded-xl font-black focus:ring-2 focus:ring-[#d9ff4a]/60" style="${selectStyle}">${exerciseOptionsHtml(ex.name)}</select>
-${isCustom? `<input type="text" placeholder="種目名を入力" data-ex-id="${ex.id}" value="${escapeHtml(ex.name)}" class="ex-name-custom w-full mt-2 p-2.5 bg-black/30 border border-white/[0.08] rounded-xl font-bold focus:ring-2 focus:ring-[#d9ff4a]/60" />`: ''}
+<select data-ex-id="${ex.id}" class="ex-name-select w-full p-2.5 pr-9 bg-white border border-neutral-900/[0.09] rounded-xl font-black focus:ring-2 focus:ring-[#2e3a5c]/40" style="${selectStyle}">${exerciseOptionsHtml(ex.name)}</select>
+${isCustom? `<input type="text" placeholder="種目名を入力" data-ex-id="${ex.id}" value="${escapeHtml(ex.name)}" class="ex-name-custom w-full mt-2 p-2.5 bg-white border border-neutral-900/[0.09] rounded-xl font-bold focus:ring-2 focus:ring-[#2e3a5c]/40" />`: ''}
 </div>
-<button onclick="removeExercise('${ex.id}')" class="p-2 text-red-400 hover:bg-white/[0.06] rounded-full shrink-0"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+<button onclick="removeExercise('${ex.id}')" class="p-2 text-red-400 hover:bg-neutral-900/[0.05] rounded-full shrink-0"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
 </div>
 <div class="space-y-2">
 <div class="flex text-[9px] font-black tracking-wider text-neutral-500 px-1 gap-2">
@@ -616,29 +627,29 @@ ${isCustom? `<input type="text" placeholder="種目名を入力" data-ex-id="${e
 </div>
 ${setsHtml}
 </div>
-<button onclick="addSet('${ex.id}')" class="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-neutral-300 bg-white/[0.05] hover:bg-white/[0.09] rounded-2xl transition-all active:scale-[0.98]"><i data-lucide="plus" class="w-4 h-4"></i> セットを追加</button>
+<button onclick="addSet('${ex.id}')" class="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-neutral-700 bg-neutral-900/[0.04] hover:bg-neutral-900/[0.07] rounded-2xl transition-all active:scale-[0.98]"><i data-lucide="plus" class="w-4 h-4"></i> セットを追加</button>
 </div>`;
 });
 
 html += `
-<div class="rounded-[1.75rem] p-4 sm:p-5 border-2 border-dashed border-[#d9ff4a]/30 bg-[#d9ff4a]/[0.03] space-y-3">
-<div class="text-sm font-black flex items-center gap-2"><i data-lucide="list-plus" class="w-5 h-5 text-[#d9ff4a]"></i> 種目を追加</div>
-<select id="add-exercise-select" onchange="document.getElementById('add-exercise-custom').classList.toggle('hidden', this.value!== '${CUSTOM_OPTION}')" class="w-full p-3 pr-9 bg-black/30 border border-white/[0.08] rounded-xl font-black focus:ring-2 focus:ring-[#d9ff4a]/60" style="${selectStyle}">
+<div class="rounded-[1.75rem] p-4 sm:p-5 border-2 border-dashed border-neutral-900/20 bg-white space-y-3">
+<div class="text-sm font-black flex items-center gap-2"><i data-lucide="list-plus" class="w-5 h-5 text-[#2e3a5c]"></i> 種目を追加</div>
+<select id="add-exercise-select" onchange="document.getElementById('add-exercise-custom').classList.toggle('hidden', this.value!== '${CUSTOM_OPTION}')" class="w-full p-3 pr-9 bg-white border border-neutral-900/[0.09] rounded-xl font-black focus:ring-2 focus:ring-[#2e3a5c]/40" style="${selectStyle}">
 ${EXERCISE_LIBRARY.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
 <option value="${CUSTOM_OPTION}">カスタム（自由入力）</option>
 </select>
-<input type="text" id="add-exercise-custom" placeholder="種目名を入力" class="hidden w-full p-3 bg-black/30 border border-white/[0.08] rounded-xl font-bold focus:ring-2 focus:ring-[#d9ff4a]/60" />
-<button onclick="addExerciseFromPicker()" class="w-full py-3.5 bg-[#d9ff4a] text-[#0b0b10] font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i> この種目を追加</button>
+<input type="text" id="add-exercise-custom" placeholder="種目名を入力" class="hidden w-full p-3 bg-white border border-neutral-900/[0.09] rounded-xl font-bold focus:ring-2 focus:ring-[#2e3a5c]/40" />
+<button onclick="addExerciseFromPicker()" class="w-full py-3.5 bg-neutral-900 text-white font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i> この種目を追加</button>
 <p class="text-[11px] text-neutral-500">過去に記録した種目は、前回のセット構成を引き継ぎます。</p>
 </div>
 
-<div class="rounded-[1.75rem] p-5 bg-gradient-to-br from-[#1b1b26] to-[#10131a] border border-white/[0.07] space-y-3">
-<div class="flex items-center gap-2 font-black"><i data-lucide="bot" class="w-5 h-5 text-[#d9ff4a]"></i> AIコーチに評価を依頼</div>
+<div class="rounded-[1.75rem] p-5 bg-white border border-neutral-900/[0.08] space-y-3">
+<div class="flex items-center gap-2 font-black"><i data-lucide="bot" class="w-5 h-5 text-[#2e3a5c]"></i> AIコーチに評価を依頼</div>
 <p class="text-sm text-neutral-400 leading-relaxed">クラスターセット法の観点から本日の記録の分析と、次回のクラスター構成・おすすめ間隔を提案するプロンプトを作成します。</p>
-<button onclick="openPhaseModal()" class="w-full py-3.5 bg-white/[0.07] hover:bg-white/[0.12] font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-white/[0.08]"><i data-lucide="copy" class="w-4 h-4"></i> プロンプトを作成</button>
+<button onclick="openPhaseModal()" class="w-full py-3.5 bg-neutral-900/[0.04] hover:bg-neutral-900/[0.08] font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-neutral-900/[0.09]"><i data-lucide="copy" class="w-4 h-4"></i> プロンプトを作成</button>
 </div>
 
-<button onclick="saveLog()" class="w-full py-4 bg-[#d9ff4a] text-[#0b0b10] text-base font-black rounded-3xl shadow-[0_14px_36px_-10px_rgba(217,255,74,0.55)] active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="check" class="w-5 h-5"></i> 保存する</button>`;
+<button onclick="saveLog()" class="w-full py-4 bg-neutral-900 text-white text-base font-black rounded-3xl shadow-[0_14px_30px_-12px_rgba(24,24,32,0.35)] active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="check" class="w-5 h-5"></i> 保存する</button>`;
 
 content.innerHTML = html;
 }
