@@ -2,333 +2,198 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ワークアウト記録 | Workout Tracker</title>
-  <meta name="description" content="クラスターセット法向けトレーニング記録アプリ。Big3の推定1RM、カレンダー履歴、AIコーチ用プロンプト生成に対応。">
-  <meta name="theme-color" content="#171717">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%234f46e5'/%3E%3Ctext x='50' y='70' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EW%3C/text%3E%3C/svg%3E">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>FORGE | トレーニングログ</title>
+  <meta name="description" content="トレーニング記録アプリ FORGE。カレンダーで振り返り、種目を選んで重量・回数・セットを記録。クラスターセット法向けAIコーチプロンプト対応。">
+  <meta name="theme-color" content="#0b0b10">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%230b0b10'/%3E%3Ctext x='50' y='72' font-size='58' text-anchor='middle' fill='%23d9ff4a' font-family='sans-serif' font-weight='900'%3EF%3C/text%3E%3C/svg%3E">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
   <style>
-    /* 数値入力のスピンボタンを非表示 */
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
-    /* iOSでの入力時ズーム防止 */
-    input, textarea, select {
-      font-size: 16px !important;
-    }
-    /* カレンダー用のアクティブ表示 */
-    .calendar-day-active {
-      background-color: #4f46e5 !important;
-      color: white !important;
-      font-weight: bold;
-    }
-    .calendar-day-today {
-      border: 2px solid #4f46e5;
-    }
-    /* 下部ナビゲーション（フローティングドック）の余白確保 */
-    .pb-safe-nav {
-      padding-bottom: calc(7.5rem + env(safe-area-inset-bottom));
-    }
-    /* アプリらしい操作感のための土台 */
+    :root { --volt: #d9ff4a; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif;
       -webkit-tap-highlight-color: transparent;
       -webkit-font-smoothing: antialiased;
+      background: #0b0b10;
     }
-    button, input, select, textarea {
-      touch-action: manipulation;
-    }
-    input[type=number] {
-      font-variant-numeric: tabular-nums;
-    }
-    /* 画面遷移アニメーション */
-    @keyframes viewIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .view-enter {
-      animation: viewIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-    /* モーダルの出現アニメーション */
-    @keyframes sheetIn {
-      from { opacity: 0; transform: translateY(14px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    [id$="-modal"] > div {
-      animation: sheetIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-    /* カレンダーの選択日 */
-    .calendar-day-active {
-      background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
-      box-shadow: 0 6px 16px -6px rgba(79, 70, 229, 0.55);
-    }
+    button, input, select, textarea { touch-action: manipulation; }
+    input[type=number], .tnum { font-variant-numeric: tabular-nums; }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    input, textarea, select { font-size: 16px !important; }
+    select { -webkit-appearance: none; appearance: none; }
+    .pb-dock { padding-bottom: calc(7.5rem + env(safe-area-inset-bottom)); }
+    @keyframes viewIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .view-enter { animation: viewIn .3s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes sheetIn { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    [id$="-modal"] > div { animation: sheetIn .24s cubic-bezier(.22,1,.36,1) both; }
+    .volt-grad { background: linear-gradient(120deg, #eaff8a, #d9ff4a 45%, #9fe870); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .glass { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+    .cal-has { background: rgba(217,255,74,.14); }
+    .cal-has-strong { background: rgba(217,255,74,.30); }
+    .cal-selected { background: var(--volt) !important; color: #0b0b10 !important; box-shadow: 0 8px 22px -8px rgba(217,255,74,.65); }
+    .cal-selected .cal-vol { color: rgba(11,11,16,.6) !important; }
+    ::selection { background: rgba(217,255,74,.35); }
   </style>
 </head>
-<body class="font-sans text-neutral-800 bg-neutral-100 antialiased selection:bg-indigo-200">
+<body class="text-neutral-100 antialiased">
 
-  <div id="app" class="min-h-screen pb-safe-nav relative">
-    
-    <!-- =========================
-         HOME View 
-    ========================= -->
+  <div id="app" class="min-h-screen pb-dock relative max-w-2xl mx-auto w-full">
+
+    <!-- ============ HOME ============ -->
     <div id="view-home" class="hidden">
-      <!-- ヘッダーとBig3情報 -->
-      <header class="bg-gradient-to-br from-neutral-900 via-neutral-900 to-indigo-950 text-white pt-10 pb-7 px-4 sm:px-6 rounded-b-[2.5rem] shadow-xl relative overflow-hidden">
-        <h1 class="text-2xl font-black tracking-tight mb-4 flex items-center gap-2">
-          <i data-lucide="activity" class="text-indigo-400 w-6 h-6"></i>
-          Workout Tracker
-        </h1>
-        
-        <!-- クイックアクションカード -->
-        <div class="grid grid-cols-2 gap-3 mb-6">
-          <button onclick="openRecordView()" class="bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 transition-all p-4 rounded-3xl flex flex-col items-center justify-center gap-1 shadow-lg shadow-indigo-950/40 active:scale-95">
-            <i data-lucide="plus-circle" class="w-6 h-6 text-white mb-1"></i>
-            <span class="text-xs font-bold text-white">記録する</span>
-          </button>
-          <button onclick="changeView('CALENDAR')" class="bg-white/[0.08] hover:bg-white/[0.14] transition-all border border-white/10 backdrop-blur-sm p-4 rounded-3xl flex flex-col items-center justify-center gap-1 active:scale-95">
-            <i data-lucide="calendar-days" class="w-6 h-6 text-indigo-400 mb-1"></i>
-            <span class="text-xs font-bold text-neutral-300">予定・履歴確認</span>
-          </button>
+      <header class="px-5 pt-10 pb-2 flex items-end justify-between">
+        <div>
+          <div class="text-[11px] font-black tracking-[0.35em] text-[#d9ff4a]">FORGE.</div>
+          <h1 class="text-3xl font-black tracking-tight mt-1">トレーニング<span class="volt-grad">ログ</span></h1>
         </div>
-
-        <div id="home-big3-container"></div>
+        <div id="home-date" class="text-right text-xs font-bold text-neutral-400 leading-relaxed"></div>
       </header>
-
-      <main class="p-4 mt-2 max-w-2xl mx-auto space-y-6" id="home-recent-container"></main>
-    </div>
-
-    <!-- =========================
-         CALENDAR View (統合された履歴・予定)
-    ========================= -->
-    <div id="view-calendar" class="hidden min-h-screen bg-neutral-50">
-      <header class="bg-white/85 backdrop-blur-xl border-b border-neutral-200/70 sticky top-0 z-10 p-4 flex items-center justify-between">
-        <h1 class="text-lg font-bold flex items-center gap-2">
-          <i data-lucide="calendar-days" class="w-5 h-5 text-indigo-600"></i> 予定・履歴
-        </h1>
-      </header>
-      <main class="p-4 max-w-2xl mx-auto space-y-4" id="calendar-content"></main>
-    </div>
-
-    <!-- =========================
-         RECORD View 
-    ========================= -->
-    <div id="view-record" class="hidden min-h-screen bg-neutral-50">
-      <header class="bg-white/85 backdrop-blur-xl border-b border-neutral-200/70 sticky top-0 z-20 p-4 flex items-center justify-between">
-        <button onclick="changeView('HOME')" class="p-2 -ml-2 rounded-full hover:bg-neutral-100 transition-colors">
-          <i data-lucide="x" class="w-6 h-6"></i>
+      <main class="px-5 mt-4 space-y-5">
+        <button onclick="openRecordView()" class="w-full py-4 rounded-3xl bg-[#d9ff4a] text-[#0b0b10] font-black text-base shadow-[0_14px_36px_-10px_rgba(217,255,74,0.55)] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+          <i data-lucide="plus" class="w-5 h-5"></i> 今日のトレーニングを記録
         </button>
-        <h1 id="record-view-title" class="text-lg font-bold">トレーニングを記録</h1>
-        <button onclick="saveLog()" class="bg-indigo-600 text-white text-sm font-bold py-2 px-4 hover:bg-indigo-700 rounded-full shadow-md shadow-indigo-600/25 flex items-center gap-1 transition-all active:scale-95">
-          <i data-lucide="save" class="w-5 h-5"></i> 保存
-        </button>
-      </header>
-      <main id="record-content" class="p-4 max-w-2xl mx-auto space-y-6"></main>
-    </div>
-
-    <!-- =========================
-         SETTINGS View 
-    ========================= -->
-    <div id="view-settings" class="hidden min-h-screen bg-neutral-50">
-      <header class="bg-white/85 backdrop-blur-xl border-b border-neutral-200/70 sticky top-0 z-10 p-4 flex items-center">
-        <h1 class="text-lg font-bold flex items-center gap-2">
-          <i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> 設定・データ管理
-        </h1>
-      </header>
-      <main class="p-4 max-w-2xl mx-auto space-y-6 mt-2">
-        <section class="bg-white p-5 rounded-[1.75rem] shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] border border-neutral-100">
-          <div class="flex items-center gap-2 font-bold text-neutral-800 mb-2">
-            <i data-lucide="download" class="w-5 h-5 text-blue-500"></i>
-            データのバックアップ (出力)
-          </div>
-          <p class="text-sm text-neutral-500 mb-4 leading-relaxed">
-            現在のすべての記録と予定を文字列としてコピーします。
-          </p>
-          <button onclick="exportData()" class="w-full py-3.5 bg-blue-50 text-blue-600 font-bold rounded-xl hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 border border-blue-200">
-            <i data-lucide="copy" class="w-5 h-5"></i> データをコピーする
-          </button>
-        </section>
-
-        <section class="bg-white p-5 rounded-[1.75rem] shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] border border-neutral-100">
-          <div class="flex items-center gap-2 font-bold text-neutral-800 mb-2">
-            <i data-lucide="upload" class="w-5 h-5 text-emerald-500"></i>
-            データの復元 (入力)
-          </div>
-          <p class="text-sm text-neutral-500 mb-4 leading-relaxed">
-            バックアップデータを貼り付けて復元します。<span class="text-red-500 font-bold">※現在のデータは上書きされます。</span>
-          </p>
-          <textarea id="import-textarea" rows="4" class="w-full p-3 bg-neutral-100 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-emerald-500 text-sm text-neutral-600 font-mono mb-4" placeholder="ここに文字列をペースト..."></textarea>
-          <button onclick="importData()" class="w-full py-3.5 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 shadow-sm">
-            <i data-lucide="refresh-cw" class="w-5 h-5"></i> 復元を実行する
-          </button>
-        </section>
+        <div id="home-pr"></div>
+        <div id="home-chart"></div>
+        <div id="home-recent"></div>
       </main>
     </div>
 
-    <!-- 下部固定タブナビゲーション -->
-    <nav class="fixed bottom-3 left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[27rem] bg-white/90 backdrop-blur-xl border border-neutral-200/80 rounded-[1.75rem] shadow-[0_16px_44px_-12px_rgba(0,0,0,0.38)] pt-2 px-3 z-40" style="margin-bottom: env(safe-area-inset-bottom)">
-      <div class="w-full flex justify-between items-center pb-2">
-        <button onclick="changeView('HOME')" id="tab-HOME" class="flex flex-col items-center p-2 rounded-2xl text-neutral-400 hover:text-indigo-600 transition-all active:scale-95 w-16">
-          <i data-lucide="home" class="w-6 h-6 mb-1"></i>
-          <span class="text-[10px] font-bold">ホーム</span>
+    <!-- ============ CALENDAR ============ -->
+    <div id="view-calendar" class="hidden">
+      <header class="px-5 pt-10 pb-2">
+        <div class="text-[11px] font-black tracking-[0.35em] text-[#d9ff4a]">REVIEW</div>
+        <h1 class="text-3xl font-black tracking-tight mt-1">カレンダー</h1>
+      </header>
+      <main class="px-5 mt-4 space-y-5" id="calendar-content"></main>
+    </div>
+
+    <!-- ============ RECORD ============ -->
+    <div id="view-record" class="hidden">
+      <header class="sticky top-0 z-20 bg-[#0b0b10]/85 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3 flex items-center justify-between">
+        <button onclick="changeView('HOME')" class="p-2 -ml-1 rounded-full hover:bg-white/[0.06] transition-colors" aria-label="閉じる">
+          <i data-lucide="x" class="w-6 h-6"></i>
         </button>
-        <button onclick="changeView('CALENDAR')" id="tab-CALENDAR" class="flex flex-col items-center p-2 rounded-2xl text-neutral-400 hover:text-indigo-600 transition-all active:scale-95 w-16">
-          <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i>
-          <span class="text-[10px] font-bold">予定・履歴</span>
+        <h1 id="record-view-title" class="text-base font-black">記録する</h1>
+        <button onclick="saveLog()" class="bg-[#d9ff4a] text-[#0b0b10] text-sm font-black py-2 px-4 rounded-full shadow-[0_8px_22px_-8px_rgba(217,255,74,0.7)] active:scale-95 transition-all flex items-center gap-1">
+          <i data-lucide="check" class="w-4 h-4"></i> 保存
+        </button>
+      </header>
+      <main id="record-content" class="px-5 mt-4 space-y-5"></main>
+    </div>
+
+    <!-- ============ SETTINGS ============ -->
+    <div id="view-settings" class="hidden">
+      <header class="px-5 pt-10 pb-2">
+        <div class="text-[11px] font-black tracking-[0.35em] text-[#d9ff4a]">DATA</div>
+        <h1 class="text-3xl font-black tracking-tight mt-1">設定・データ</h1>
+      </header>
+      <main class="px-5 mt-4 space-y-5">
+        <section class="glass rounded-[1.75rem] p-5">
+          <div class="flex items-center gap-2 font-black mb-1"><i data-lucide="download" class="w-5 h-5 text-[#d9ff4a]"></i> バックアップ</div>
+          <p class="text-sm text-neutral-400 mb-4 leading-relaxed">記録と予定を書き出します。端末を変える前に保存してください。</p>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="exportData('copy')" class="py-3.5 bg-white/[0.06] hover:bg-white/[0.1] font-bold rounded-2xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 border border-white/[0.08]"><i data-lucide="copy" class="w-4 h-4"></i> コピー</button>
+            <button onclick="exportData('file')" class="py-3.5 bg-white/[0.06] hover:bg-white/[0.1] font-bold rounded-2xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 border border-white/[0.08]"><i data-lucide="file-down" class="w-4 h-4"></i> ファイル</button>
+          </div>
+        </section>
+        <section class="glass rounded-[1.75rem] p-5">
+          <div class="flex items-center gap-2 font-black mb-1"><i data-lucide="upload" class="w-5 h-5 text-[#d9ff4a]"></i> 復元</div>
+          <p class="text-sm text-neutral-400 mb-4 leading-relaxed">バックアップ文字列を貼り付けて復元します。<span class="text-red-400 font-bold">現在のデータは上書きされます。</span></p>
+          <textarea id="import-textarea" rows="4" class="w-full p-3 bg-black/30 rounded-2xl border border-white/[0.08] focus:ring-2 focus:ring-[#d9ff4a]/60 text-sm text-neutral-300 font-mono mb-4" placeholder="ここに文字列をペースト..."></textarea>
+          <button onclick="importData()" class="w-full py-3.5 bg-[#d9ff4a] text-[#0b0b10] font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> 復元を実行する</button>
+        </section>
+        <p class="text-[11px] text-neutral-500 leading-relaxed px-1">データはこのブラウザの中（localStorage）に保存されます。サーバーには送信されません。</p>
+      </main>
+    </div>
+
+    <!-- ============ DOCK NAV ============ -->
+    <nav class="fixed bottom-3 left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[27rem] bg-[#15151d]/90 backdrop-blur-xl border border-white/[0.08] rounded-[1.75rem] shadow-[0_18px_48px_-12px_rgba(0,0,0,0.8)] pt-2 px-3 z-40" style="margin-bottom: env(safe-area-inset-bottom)">
+      <div class="w-full flex justify-between items-center pb-2">
+        <button onclick="changeView('HOME')" id="tab-HOME" class="flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95 w-16">
+          <i data-lucide="home" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">ホーム</span>
+        </button>
+        <button onclick="changeView('CALENDAR')" id="tab-CALENDAR" class="flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95 w-16">
+          <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">カレンダー</span>
         </button>
         <div class="relative w-16 flex justify-center">
-          <button onclick="openRecordView()" class="absolute bottom-2 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white w-14 h-14 rounded-full shadow-xl shadow-indigo-600/40 flex items-center justify-center hover:from-indigo-600 hover:to-indigo-800 transition-all active:scale-90 border-4 border-white">
+          <button onclick="openRecordView()" class="absolute bottom-2 bg-[#d9ff4a] text-[#0b0b10] w-14 h-14 rounded-full shadow-[0_12px_30px_-6px_rgba(217,255,74,0.65)] flex items-center justify-center active:scale-90 transition-all border-4 border-[#0b0b10]">
             <i data-lucide="plus" class="w-6 h-6"></i>
           </button>
         </div>
-        <button onclick="changeView('SETTINGS')" id="tab-SETTINGS" class="flex flex-col items-center p-2 rounded-2xl text-neutral-400 hover:text-indigo-600 transition-all active:scale-95 w-16">
-          <i data-lucide="settings" class="w-6 h-6 mb-1"></i>
-          <span class="text-[10px] font-bold">設定</span>
+        <button onclick="changeView('SETTINGS')" id="tab-SETTINGS" class="flex flex-col items-center p-2 rounded-2xl text-neutral-500 transition-all active:scale-95 w-16">
+          <i data-lucide="settings" class="w-6 h-6 mb-1"></i><span class="text-[10px] font-black">設定</span>
         </button>
       </div>
     </nav>
 
-    <!-- =========================
-         Modals 
-    ========================= -->
-    <!-- メッセージモーダル -->
-    <div id="message-modal" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] hidden flex items-center justify-center z-[60] p-4 transition-opacity">
-      <div class="bg-white p-6 rounded-3xl max-w-sm w-full shadow-xl text-center">
+    <!-- ============ MODALS ============ -->
+    <div id="message-modal" class="fixed inset-0 bg-black/70 backdrop-blur-[2px] hidden flex items-end sm:items-center justify-center z-[60] p-4">
+      <div class="bg-[#17171f] border border-white/[0.08] p-6 rounded-[1.75rem] max-w-sm w-full shadow-2xl text-center">
         <div id="message-modal-icon" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"></div>
-        <h3 id="message-modal-title" class="text-lg font-bold mb-2 text-neutral-800"></h3>
-        <p id="message-modal-text" class="text-neutral-600 text-sm mb-6 whitespace-pre-wrap leading-relaxed"></p>
-        <button onclick="closeMessageModal()" class="w-full py-3.5 bg-neutral-900 font-bold text-white rounded-xl hover:bg-neutral-800 transition-colors">閉じる</button>
+        <h3 id="message-modal-title" class="text-lg font-black mb-2"></h3>
+        <p id="message-modal-text" class="text-neutral-400 text-sm mb-6 whitespace-pre-wrap leading-relaxed"></p>
+        <button onclick="closeMessageModal()" class="w-full py-3.5 bg-[#d9ff4a] font-black text-[#0b0b10] rounded-2xl active:scale-[0.98] transition-all">閉じる</button>
       </div>
     </div>
 
-    <!-- 削除確認モーダル -->
-    <div id="delete-modal" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] hidden flex items-center justify-center z-[60] p-4">
-      <div class="bg-white p-6 rounded-3xl max-w-sm w-full shadow-xl">
-        <h3 class="text-lg font-bold mb-2 text-neutral-900">データを削除しますか？</h3>
-        <p class="text-neutral-600 text-sm mb-6">この操作は取り消せません。</p>
-        <div class="flex gap-3 justify-end">
-          <button onclick="closeDeleteModal()" class="flex-1 py-3.5 bg-neutral-100 font-bold text-neutral-600 rounded-xl hover:bg-neutral-200 transition-colors">キャンセル</button>
-          <button onclick="confirmDelete()" class="flex-1 py-3.5 bg-red-500 font-bold text-white rounded-xl hover:bg-red-600 transition-colors">削除する</button>
+    <div id="delete-modal" class="fixed inset-0 bg-black/70 backdrop-blur-[2px] hidden flex items-end sm:items-center justify-center z-[60] p-4">
+      <div class="bg-[#17171f] border border-white/[0.08] p-6 rounded-[1.75rem] max-w-sm w-full shadow-2xl">
+        <h3 class="text-lg font-black mb-2">削除しますか？</h3>
+        <p class="text-neutral-400 text-sm mb-6">この操作は取り消せません。</p>
+        <div class="flex gap-3">
+          <button onclick="closeDeleteModal()" class="flex-1 py-3.5 bg-white/[0.06] font-bold text-neutral-300 rounded-2xl active:scale-[0.97] transition-all">キャンセル</button>
+          <button onclick="confirmDelete()" class="flex-1 py-3.5 bg-red-500 font-black text-white rounded-2xl active:scale-[0.97] transition-all">削除する</button>
         </div>
       </div>
     </div>
 
-    <!-- ピリオダイゼーション選択モーダル -->
-    <div id="periodization-modal" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] hidden flex items-center justify-center z-[60] p-4">
-      <div class="bg-white p-5 sm:p-6 rounded-3xl max-w-md w-full shadow-xl flex flex-col max-h-[90vh]">
-        <div class="flex items-center gap-2 mb-3 text-indigo-700 font-bold text-lg">
-          <i data-lucide="target" class="w-6 h-6"></i> AIに評価・次回提案を依頼
-        </div>
-        <p class="text-sm text-neutral-600 mb-4 leading-relaxed">
-          現在のフェーズを選択してプロンプト（指示書）をコピーします。<br>
-          <span class="text-xs text-indigo-600 font-semibold">※クラスターセット法に沿ったログ評定・次回Day〇のクラスター構成・次回おすすめ日付の生成プロンプトが出力されます。</span>
-        </p>
-        <div class="space-y-3 overflow-y-auto pr-1 flex-1">
-          <button onclick="generateAndCopyPrompt('筋肥大')" class="w-full text-left p-4 rounded-xl border border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 transition-all flex flex-col gap-1 focus:ring-2 focus:ring-indigo-500">
-            <span class="font-bold text-indigo-900 text-base">筋肥大期 (Hypertrophy)</span>
-            <span class="text-xs text-indigo-600">中重量・多レップのクラスター（目安：75〜85%1RM、1クラスター4〜6レップ、レップ間休息15〜30秒）。</span>
+    <div id="phase-modal" class="fixed inset-0 bg-black/70 backdrop-blur-[2px] hidden flex items-end sm:items-center justify-center z-[60] p-4">
+      <div class="bg-[#17171f] border border-white/[0.08] p-6 rounded-[1.75rem] max-w-md w-full shadow-2xl">
+        <div class="flex items-center gap-2 mb-2 font-black text-lg"><i data-lucide="bot" class="w-6 h-6 text-[#d9ff4a]"></i> AIコーチに依頼</div>
+        <p class="text-sm text-neutral-400 mb-4 leading-relaxed">現在のフェーズを選ぶと、クラスターセット法に沿った評価と次回提案のためのプロンプトをコピーします。</p>
+        <div class="space-y-3">
+          <button onclick="generateAndCopyPrompt('筋肥大')" class="w-full text-left p-4 rounded-2xl border border-white/[0.08] hover:border-[#d9ff4a]/50 hover:bg-white/[0.05] transition-all flex flex-col gap-1">
+            <span class="font-black text-base">筋肥大期</span>
+            <span class="text-xs text-neutral-400">中重量・多レップのクラスター（目安：75〜85%1RM、1クラスター4〜6レップ、レップ間休息15〜30秒）</span>
           </button>
-          <button onclick="generateAndCopyPrompt('筋力')" class="w-full text-left p-4 rounded-xl border border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 transition-all flex flex-col gap-1 focus:ring-2 focus:ring-indigo-500">
-            <span class="font-bold text-indigo-900 text-base">筋力期 (Strength)</span>
-            <span class="text-xs text-indigo-600">高重量・少レップのクラスター（目安：85〜92.5%1RM、1クラスター2〜4レップ、レップ間休息20〜45秒）。</span>
+          <button onclick="generateAndCopyPrompt('筋力')" class="w-full text-left p-4 rounded-2xl border border-white/[0.08] hover:border-[#d9ff4a]/50 hover:bg-white/[0.05] transition-all flex flex-col gap-1">
+            <span class="font-black text-base">筋力期</span>
+            <span class="text-xs text-neutral-400">高重量・少レップのクラスター（目安：85〜92.5%1RM、1クラスター2〜4レップ、レップ間休息20〜45秒）</span>
           </button>
         </div>
-        <button onclick="closePeriodizationModal()" class="w-full mt-4 py-3.5 bg-neutral-100 font-bold text-neutral-600 rounded-xl hover:bg-neutral-200 transition-colors shrink-0">キャンセル</button>
+        <button onclick="closePhaseModal()" class="w-full mt-4 py-3.5 bg-white/[0.06] font-bold text-neutral-300 rounded-2xl active:scale-[0.98] transition-all">キャンセル</button>
       </div>
     </div>
 
-    <!-- カレンダー手動予定追加モーダル -->
-    <div id="schedule-modal" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] hidden flex items-center justify-center z-[60] p-4">
-      <div class="bg-white p-5 sm:p-6 rounded-3xl max-w-sm w-full shadow-xl">
-        <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i data-lucide="calendar-plus" class="w-5 h-5 text-indigo-600"></i> 予定を追加</h3>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-neutral-500 mb-1">日付</label>
-            <input type="date" id="schedule-date-input" class="w-full p-3 bg-neutral-100 rounded-xl font-bold border-none text-neutral-700" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-neutral-500 mb-1">予定メニュー (Texas Method)</label>
-            <div class="grid grid-cols-2 gap-2" id="schedule-type-buttons">
-              <!-- ボタンはJSで生成 -->
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-neutral-500 mb-1">メモ (任意)</label>
-            <input type="text" id="schedule-title-input" placeholder="例: ベンチ中心" class="w-full p-3 bg-neutral-100 rounded-xl text-sm border-none focus:ring-2 focus:ring-indigo-500" />
-          </div>
-        </div>
-
-        <div class="flex gap-3 pt-6">
-          <button onclick="closeScheduleModal()" class="flex-1 py-3 bg-neutral-100 font-bold text-neutral-600 rounded-xl hover:bg-neutral-200 transition-colors">キャンセル</button>
-          <button onclick="saveSchedule()" class="flex-1 py-3 bg-indigo-600 font-bold text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-md">追加する</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 補助種目テンプレートモーダル -->
-    <div id="template-modal" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] hidden flex items-center justify-center z-[60] p-4 transition-opacity">
-      <div class="bg-white p-5 sm:p-6 rounded-3xl max-w-sm w-full shadow-xl flex flex-col max-h-[90vh]">
-        <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-emerald-700">
-          <i data-lucide="list-plus" class="w-5 h-5"></i> 補助種目を追加
-        </h3>
-        <p class="text-xs text-neutral-500 mb-4 leading-relaxed">追加したい種目を選択してください。過去の記録がある場合は自動で引継ぎます。</p>
-        
-        <div id="template-buttons" class="grid grid-cols-2 gap-2 overflow-y-auto pr-1 pb-2 flex-1">
-          <!-- JSで生成 -->
-        </div>
-        
-        <div class="mt-2 pt-4 border-t border-neutral-100 shrink-0">
-          <button onclick="closeTemplateModal()" class="w-full py-3 bg-neutral-100 font-bold text-neutral-600 rounded-xl hover:bg-neutral-200 transition-colors">閉じる</button>
-        </div>
-      </div>
-    </div>
-
-  </div> <!-- /#app -->
+  </div>
 
   <script>
+    // ===== Storage (旧アプリと同一キー・同一形式。既存データはそのまま読める) =====
     const STORAGE_KEY = 'workout_tracker_data_v2';
     const SCHEDULES_KEY = 'workout_tracker_schedules_v1';
 
-    // メニューとテーマカラーの定義 (Texas Method 4分割)
-    const MENU_CONFIG = {
-      'Day1': { label: 'Day1: BSQ(V)/BP(S)', badgeClass: 'bg-blue-100 text-blue-700', marker: 'bg-blue-500', markerOutline: 'border-blue-500', activeBtn: 'bg-blue-600 text-white shadow-md', inactiveBtn: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200' },
-      'Day2': { label: 'Day2: 補助種目', badgeClass: 'bg-emerald-100 text-emerald-700', marker: 'bg-emerald-500', markerOutline: 'border-emerald-500', activeBtn: 'bg-emerald-600 text-white shadow-md', inactiveBtn: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200' },
-      'Day3': { label: 'Day3: DL(S)/BP(V)', badgeClass: 'bg-amber-100 text-amber-700', marker: 'bg-amber-500', markerOutline: 'border-amber-500', activeBtn: 'bg-amber-500 text-white shadow-md', inactiveBtn: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200' },
-      'Day4': { label: 'Day4: BSQ(S)', badgeClass: 'bg-purple-100 text-purple-700', marker: 'bg-purple-500', markerOutline: 'border-purple-500', activeBtn: 'bg-purple-600 text-white shadow-md', inactiveBtn: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200' },
-      'A': { label: '旧Aメニュー', badgeClass: 'bg-slate-100 text-slate-700', marker: 'bg-slate-500', markerOutline: 'border-slate-500', activeBtn: 'bg-slate-600 text-white shadow-md', inactiveBtn: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200' },
-      'B': { label: '旧Bメニュー', badgeClass: 'bg-slate-100 text-slate-700', marker: 'bg-slate-500', markerOutline: 'border-slate-500', activeBtn: 'bg-slate-600 text-white shadow-md', inactiveBtn: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200' }
-    };
-
-    // 補助種目テンプレートのリスト
-    const AUX_EXERCISES = [
-      'チンニング',
-      'トライセプスエクステンション',
-      'プルオーバー',
-      'ベントオーバーロー',
-      'サイドレイズ',
-      '内転筋',
-      'アームカール',
-      'デッドバグ'
+    const EXERCISE_LIBRARY = [
+      'スクワット', 'ベンチプレス', 'デッドリフト',
+      'チンニング', 'ハーフチンニング', 'ベントオーバーロー', 'ショルダープレス',
+      'インクラインベンチプレス', 'ルーマニアンデッドリフト', 'ブルガリアンスクワット',
+      'ラットプルダウン', 'レッグプレス', 'ディップス', 'プレートプッシュアップ',
+      'サイドレイズ', 'アームカール', 'トライセプスエクステンション', 'プルオーバー',
+      '内転筋', 'デッドバグ'
     ];
+    const CUSTOM_OPTION = '__custom__';
 
     const generateUUID = () => {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
-      }
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
       });
     };
 
-    // 端末のローカル日付を YYYY-MM-DD で返す (toISOString はUTCのため早朝に日付がずれる)
+    // 端末のローカル日付 (UTCだと早朝に前日になるため)
     const getLocalDateStr = (date = new Date()) => {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -336,12 +201,10 @@
       return `${y}-${m}-${d}`;
     };
 
-    // innerHTML へ差し込むユーザー入力を無害化する
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     const calculate1RM = (weight, reps) => {
-      const w = parseFloat(weight);
-      const r = parseInt(reps, 10);
+      const w = parseFloat(weight), r = parseInt(reps, 10);
       if (isNaN(w) || isNaN(r) || r < 1 || w <= 0) return 0;
       if (r === 1) return w;
       return Math.round(w * (1 + r * 0.025));
@@ -351,58 +214,46 @@
       if (!dateString) return '';
       return dateString.replace(/-/g, '/').replace(/[^\d/]/g, '');
     };
+    const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+    const prettyDate = (dateString) => {
+      if (!dateString) return '';
+      const [y, m, d] = dateString.split('-').map(Number);
+      const wd = new Date(y, m - 1, d).getDay();
+      return `${m}/${d} (${WEEKDAYS[wd]})`;
+    };
 
-    // --- State Management ---
+    // ===== State =====
     let currentView = 'HOME';
     let logs = [];
     let schedules = [];
-    
-    // Record State
-    let editingLogId = null; 
+    let editingLogId = null;
     let recordDate = getLocalDateStr();
-    let menuType = 'Day1';
     let exercises = [];
-    
-    // Calendar State
-    let currentCalendarMonth = new Date();
+    let currentCalendarMonth = new Date(); currentCalendarMonth.setDate(1);
     let selectedCalendarDate = getLocalDateStr();
-    let scheduleFormType = 'Day1';
+    let targetDeleteId = null, targetDeleteType = 'log';
 
-    // Delete Modal State
-    let targetDeleteId = null; 
-    let targetDeleteType = 'log'; 
-
-    // --- Loading & Saving ---
-    const normalizeAndMergeLogs = (rawLogs) => {
-      const dateMap = {};
-      rawLogs.forEach(log => {
-        const date = log.date;
-        const key = `${date}_${log.menuType}`; 
-        if (!dateMap[key]) {
-          dateMap[key] = { id: log.id, date: date, menuType: log.menuType, exercises: [] };
-        }
-        log.exercises.forEach(ex => {
-          const existingEx = dateMap[key].exercises.find(e => e.name === ex.name);
-          if (existingEx) {
-            existingEx.sets = [...existingEx.sets, ...ex.sets];
-          } else {
-            dateMap[key].exercises.push(JSON.parse(JSON.stringify(ex)));
-          }
-        });
-      });
-      return Object.values(dateMap).sort((a, b) => new Date(b.date) - new Date(a.date));
-    };
+    // ===== Load / Save =====
+    const normalizeLog = (log) => ({
+      id: log.id || generateUUID(),
+      date: log.date,
+      menuType: log.menuType || 'Free',
+      exercises: (log.exercises || []).map(ex => ({
+        id: ex.id || generateUUID(),
+        name: ex.name || '',
+        sets: (ex.sets || []).map(s => ({ id: s.id || generateUUID(), weight: s.weight ?? '', reps: s.reps ?? '', memo: s.memo ?? '' }))
+      }))
+    });
 
     const loadData = () => {
       try {
-        const storedLogs = localStorage.getItem(STORAGE_KEY);
-        if (storedLogs) logs = normalizeAndMergeLogs(JSON.parse(storedLogs));
-      } catch (e) { console.error("Log load error", e); }
-      
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) logs = JSON.parse(raw).map(normalizeLog).filter(l => l.date).sort((a, b) => new Date(b.date) - new Date(a.date));
+      } catch (e) { console.error('Log load error', e); }
       try {
-        const storedSchedules = localStorage.getItem(SCHEDULES_KEY);
-        if (storedSchedules) schedules = JSON.parse(storedSchedules);
-      } catch (e) { console.error("Schedule load error", e); }
+        const raw = localStorage.getItem(SCHEDULES_KEY);
+        if (raw) schedules = JSON.parse(raw);
+      } catch (e) { console.error('Schedule load error', e); }
     };
 
     const saveData = () => {
@@ -410,390 +261,58 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
         localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules));
       } catch (e) {
-        console.error("Save error", e);
+        console.error('Save error', e);
         openMessageModal('保存エラー', 'データの保存に失敗しました。ブラウザの空き容量や設定を確認してください。', 'error');
       }
     };
 
-    const createEmptySet = () => ({ id: generateUUID(), weight: '', reps: '', memo: '' });
-
-    // Texas Methodに基づく初期種目の生成
-    const generateInitialExercises = (type) => {
-      const getInitialData = (name, defaultSetCount) => {
-        const searchNames = name === 'チンニング' ? ['チンニング', 'ハーフチンニング'] : [name];
-        for (const log of logs) {
-          const found = log.exercises.find(ex => searchNames.includes(ex.name));
-          if (found) {
-            return {
-              name: found.name,
-              sets: found.sets.map(s => ({ ...s, id: generateUUID(), memo: '' }))
-            };
-          }
-        }
-        return { name, sets: Array.from({ length: defaultSetCount }, createEmptySet) };
-      };
-
-      let initialNames = [];
-      let defaultSets = 5;
-
-      switch(type) {
-        case 'Day1': initialNames = ['スクワット', 'ベンチプレス']; break;
-        case 'Day2': initialNames = ['チンニング', 'トライセプスエクステンション', 'ベントオーバーロー']; defaultSets = 3; break;
-        case 'Day3': initialNames = ['デッドリフト', 'ベンチプレス']; break;
-        case 'Day4': initialNames = ['スクワット']; break;
-        default: initialNames = ['スクワット', 'ベンチプレス', 'デッドリフト']; break;
-      }
-
-      return initialNames.map(name => {
-        const { name: exName, sets } = getInitialData(name, defaultSets);
-        return { id: generateUUID(), name: exName, sets };
-      });
-    };
+    // ===== Metrics =====
+    const setVolume = (s) => (parseFloat(s.weight) || 0) * (parseInt(s.reps, 10) || 0);
+    const sessionVolume = (log) => log.exercises.reduce((sum, ex) => sum + ex.sets.reduce((a, s) => a + setVolume(s), 0), 0);
+    const logsOn = (dateStr) => logs.filter(l => l.date === dateStr);
 
     const getBig3Max = () => {
-      let bench = { max: 0, date: '' }, squat = { max: 0, date: '' }, dead = { max: 0, date: '' };
-      logs.forEach(log => {
-        log.exercises.forEach(ex => {
-          const name = ex.name.toLowerCase();
-          const maxSet1RM = Math.max(0, ...ex.sets.map(s => calculate1RM(s.weight, s.reps)));
-          if (name.includes('ベンチ') && maxSet1RM > bench.max) bench = { max: maxSet1RM, date: log.date };
-          if (name.includes('スクワット') && maxSet1RM > squat.max) squat = { max: maxSet1RM, date: log.date };
-          if (name.includes('デッド') && maxSet1RM > dead.max) dead = { max: maxSet1RM, date: log.date };
-        });
-      });
-      return { bench, squat, dead, total: bench.max + squat.max + dead.max };
+      const res = { bench: { max: 0, date: '' }, squat: { max: 0, date: '' }, dead: { max: 0, date: '' } };
+      logs.forEach(log => log.exercises.forEach(ex => {
+        const name = ex.name || '';
+        const best = Math.max(0, ...ex.sets.map(s => calculate1RM(s.weight, s.reps)));
+        if (name.includes('ベンチ') && best > res.bench.max) res.bench = { max: best, date: log.date };
+        if (name.includes('スクワット') && best > res.squat.max) res.squat = { max: best, date: log.date };
+        if (name.includes('デッド') && best > res.dead.max) res.dead = { max: best, date: log.date };
+      }));
+      return { ...res, total: res.bench.max + res.squat.max + res.dead.max };
     };
 
-    // --- UI Helpers ---
-    function openMessageModal(title, msg, status = 'error') {
-      const iconContainer = document.getElementById('message-modal-icon');
-      if (status === 'error') {
-        iconContainer.className = 'w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mx-auto mb-4';
-        iconContainer.innerHTML = '<i data-lucide="alert-circle" class="w-6 h-6"></i>';
-      } else {
-        iconContainer.className = 'w-12 h-12 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center mx-auto mb-4';
-        iconContainer.innerHTML = '<i data-lucide="check-circle-2" class="w-6 h-6"></i>';
+    const lastSetFor = (name) => {
+      for (const log of logs) {
+        const found = log.exercises.find(ex => ex.name === name);
+        if (found && found.sets.length) return { log, ex: found };
       }
-      document.getElementById('message-modal-title').textContent = title;
-      document.getElementById('message-modal-text').textContent = msg;
-      lucide.createIcons();
-      document.getElementById('message-modal').classList.remove('hidden');
-    }
-    
-    function closeMessageModal() { document.getElementById('message-modal').classList.add('hidden'); }
-    
-    function openDeleteModal(id, type = 'log') {
-      targetDeleteId = id;
-      targetDeleteType = type;
-      document.getElementById('delete-modal').classList.remove('hidden');
-    }
-    
-    function closeDeleteModal() {
-      targetDeleteId = null;
-      document.getElementById('delete-modal').classList.add('hidden');
-    }
-    
-    function confirmDelete() {
-      if (targetDeleteId) {
-        if (targetDeleteType === 'log') {
-          logs = logs.filter(log => log.id !== targetDeleteId);
-        } else if (targetDeleteType === 'schedule') {
-          schedules = schedules.filter(sch => sch.id !== targetDeleteId);
-        }
-        saveData();
-        closeDeleteModal();
-        renderApp();
-      }
-    }
+      return null;
+    };
 
-    // --- App Navigation ---
+    // ===== Navigation =====
     function changeView(view) {
       currentView = view;
-      const views = ['HOME', 'CALENDAR', 'RECORD', 'SETTINGS'];
-      views.forEach(v => {
+      ['HOME', 'CALENDAR', 'RECORD', 'SETTINGS'].forEach(v => {
         const el = document.getElementById(`view-${v.toLowerCase()}`);
         if (el) el.classList.toggle('hidden', v !== currentView);
       });
-
-      // Update Bottom Nav
       ['HOME', 'CALENDAR', 'SETTINGS'].forEach(tab => {
         const el = document.getElementById(`tab-${tab}`);
-        if(el) {
-          if (tab === currentView) {
-            el.classList.add('text-indigo-600', 'bg-indigo-50');
-            el.classList.remove('text-neutral-400');
-          } else {
-            el.classList.remove('text-indigo-600', 'bg-indigo-50');
-            el.classList.add('text-neutral-400');
-          }
+        if (el) {
+          const active = tab === currentView;
+          el.classList.toggle('text-[#d9ff4a]', active);
+          el.classList.toggle('bg-white/[0.06]', active);
+          el.classList.toggle('text-neutral-500', !active);
         }
       });
-
       const currentEl = document.getElementById(`view-${currentView.toLowerCase()}`);
-      if (currentEl) {
-        currentEl.classList.remove('view-enter');
-        void currentEl.offsetWidth;
-        currentEl.classList.add('view-enter');
-      }
-
+      if (currentEl) { currentEl.classList.remove('view-enter'); void currentEl.offsetWidth; currentEl.classList.add('view-enter'); }
       renderApp();
       window.scrollTo(0, 0);
     }
 
-    // --- Record Logic ---
-    function openRecordView(initialDate = null, initialType = null, prefilledExercises = null) {
-      editingLogId = null;
-      recordDate = initialDate || getLocalDateStr();
-      let type = initialType || 'Day1';
-      if(type === 'A') type = 'Day1';
-      if(type === 'B') type = 'Day2';
-      menuType = type;
-      exercises = prefilledExercises || generateInitialExercises(menuType);
-      changeView('RECORD');
-    }
-
-    function editLog(logId) {
-      const logToEdit = logs.find(l => l.id === logId);
-      if (!logToEdit) return;
-      editingLogId = logId;
-      recordDate = logToEdit.date;
-      menuType = logToEdit.menuType;
-      exercises = JSON.parse(JSON.stringify(logToEdit.exercises));
-      changeView('RECORD');
-    }
-
-    function changeMenuType(type) {
-      menuType = type;
-      exercises = generateInitialExercises(type);
-      renderRecord();
-    }
-    
-    function addExercise() { 
-      exercises.push({ id: generateUUID(), name: '', sets: Array.from({ length: 3 }, createEmptySet) }); 
-      renderRecord(); 
-    }
-    
-    // --- 補助種目テンプレートの処理 ---
-    function openTemplateModal() {
-      renderTemplateButtons();
-      document.getElementById('template-modal').classList.remove('hidden');
-    }
-
-    function closeTemplateModal() {
-      document.getElementById('template-modal').classList.add('hidden');
-    }
-
-    function addExerciseFromTemplate(name) {
-      let sets = [];
-      let found = false;
-      const searchNames = name === 'チンニング' ? ['チンニング', 'ハーフチンニング'] : [name];
-      
-      // 過去の記録からセット構成を引き継ぐ
-      for (const log of logs) {
-        const foundEx = log.exercises.find(ex => searchNames.includes(ex.name));
-        if (foundEx) {
-          sets = foundEx.sets.map(s => ({ ...s, id: generateUUID(), memo: '' }));
-          name = foundEx.name; // ハーフで記録されていれば名前も引き継ぐ
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        sets = Array.from({ length: 3 }, createEmptySet);
-      }
-
-      exercises.push({ id: generateUUID(), name: name, sets: sets });
-      renderRecord();
-      closeTemplateModal();
-    }
-
-    function renderTemplateButtons() {
-      const container = document.getElementById('template-buttons');
-      if (!container) return;
-      let html = '';
-      AUX_EXERCISES.forEach(ex => {
-        html += `<button onclick="addExerciseFromTemplate('${ex}')" class="p-3.5 bg-neutral-50 hover:bg-emerald-50 border border-neutral-200 hover:border-emerald-300 text-sm font-bold text-neutral-700 rounded-xl transition-all text-center shadow-sm active:scale-95 flex items-center justify-center">${ex}</button>`;
-      });
-      container.innerHTML = html;
-    }
-    // --------------------------------
-
-    function removeExercise(exId) { exercises = exercises.filter(ex => ex.id !== exId); renderRecord(); }
-    function addSet(exId) { const ex = exercises.find(e => e.id === exId); if (ex) { ex.sets.push(createEmptySet()); renderRecord(); } }
-    function removeSet(exId, setId) { const ex = exercises.find(e => e.id === exId); if (ex) { ex.sets = ex.sets.filter(s => s.id !== setId); renderRecord(); } }
-    function updateExerciseNameDirectly(exId, name) { const ex = exercises.find(e => e.id === exId); if (ex) { ex.name = name; renderRecord(); } }
-
-    function saveLog() {
-      const cleanedExercises = exercises.map(ex => {
-        let name = ex.name.trim();
-        const validSets = ex.sets.filter(s => s.weight !== '' || s.reps !== '');
-        
-        if (name === '' && validSets.length > 0) {
-          name = '名称未設定種目';
-        }
-
-        return {
-          ...ex, 
-          name: name,
-          sets: validSets
-        };
-      }).filter(ex => ex.name.trim() !== '' && ex.sets.length > 0);
-
-      if (cleanedExercises.length === 0) {
-        openMessageModal('入力エラー', '記録する内容がありません。（重量または回数を入力してください）', 'error'); 
-        return;
-      }
-
-      const logData = { id: editingLogId || generateUUID(), date: recordDate, menuType, exercises: cleanedExercises };
-      if (editingLogId) logs = logs.map(l => l.id === editingLogId ? logData : l);
-      else logs.push(logData);
-      
-      logs = normalizeAndMergeLogs(logs);
-      
-      // 同じ日に同タイプのスケジュールがあれば消化したとみなして削除
-      schedules = schedules.filter(s => !(s.date === recordDate && s.menuType === menuType));
-      
-      saveData();
-      editingLogId = null;
-      changeView('HOME');
-    }
-
-    // --- AI Integration ---
-    function openPeriodizationModal() { document.getElementById('periodization-modal').classList.remove('hidden'); }
-    function closePeriodizationModal() { document.getElementById('periodization-modal').classList.add('hidden'); }
-    
-    function generateAndCopyPrompt(periodization) {
-      const currentLogData = { date: recordDate, menuType, exercises };
-      const pastLogs = logs.filter(l => l.id !== editingLogId);
-      const confLabel = MENU_CONFIG[menuType] ? MENU_CONFIG[menuType].label : menuType;
-      
-      const { bench, squat, dead } = getBig3Max();
-      
-      const nextDayMap = { 'Day1': 'Day2', 'Day2': 'Day3', 'Day3': 'Day4', 'Day4': 'Day1', 'A': 'Day1', 'B': 'Day2' };
-      const nextMenuType = nextDayMap[menuType] || 'Day1';
-      const nextMenuLabel = MENU_CONFIG[nextMenuType] ? MENU_CONFIG[nextMenuType].label : nextMenuType;
-
-      const prompt = `あなたはNSCA-CSCS（ストレングス＆コンディショニングスペシャリスト）の資格を持つ、プロフェッショナルな高レベルトレーナーです。
-クライアントはクラスターセット法でトレーニングを行っています。メイン種目は「数レップごとに短い休息（レップ間休息）を挟むクラスター形式」で実施し、疲労を抑えながら高重量・高品質なレップを積み重ねることが狙いです。Day1〜Day4は種目のローテーション区分です。
-ログの見方：同一種目の連続したセットは、クラスターを構成する小セットとして解釈してください。メモ欄に休息時間やRPEなどが書かれている場合は、それも判断材料にしてください。
-
-【本日の実施ログ】
-・日付: ${recordDate}
-・メニュー: ${confLabel} (${menuType})
-・実施内容: 
-${JSON.stringify(currentLogData, null, 2)}
-
-【現在のクライアント情報】
-・目的（ピリオダイゼーション）: ${periodization}期
-・推定1RM最高値: SQ=${squat.max}kg, BP=${bench.max}kg, DL=${dead.max}kg
-
-【これまでのトレーニング履歴】
-${JSON.stringify(pastLogs, null, 2)}
-
----
-
-### 【指示事項】
-
-1. **クラスターセット法の観点からのフィードバック（詳細）**
-   - 本日の内容について、重量（推定1RMに対する％）、1クラスターあたりのレップ数、クラスター数、レップ間休息の取り方が、クラスターセット法として適正だったかを分析してください。
-   - **良かった点**（疲労を抑えて高品質なレップを積めたか、神経系・運動生理学の観点から）
-   - **改善点・懸念点**（後半クラスターでの出力低下の兆し、休息不足、重量設定の過不足、オーバートレーニングリスクなど）
-   - ${periodization}期のクラスター構成として適正だったかを、具体的に客観評価してください。
-
-2. **次回（${nextMenuLabel}）の「日程」および「クラスター構成」のアドバイス**
-   - 記録の日付（${recordDate}）とこれまでのトレーニング頻度・疲労蓄積度から、**次回は何日（YYYY-MM-DD）に実施するのが最適か**、推奨日を出してください。
-   - 次回の「${nextMenuLabel}」で実施すべき種目ごとに、重量（2.5kg単位で丸める）、1クラスターあたりのレップ数、クラスター数、レップ間休息（秒）、クラスター間休息（分）を具体的に提示してください。
-   - 補助種目については、通常セットでの重量・レップ数・セット数を提示してください。
-
-回答は文章のみで構いません。JSONなどの機械可読フォーマットは不要です。`;
-
-      const textarea = document.createElement('textarea');
-      textarea.value = prompt;
-      textarea.style.position = 'fixed'; textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        closePeriodizationModal();
-        openMessageModal('コピーしました', `クラスターセット法に基づく分析＆次回（${nextMenuLabel}）の構成・日付アドバイス用プロンプトをコピーしました！Geminiにそのまま貼り付けてください。`, 'success');
-      } catch (err) {
-        openMessageModal('エラー', 'コピーに失敗しました。', 'error');
-      } finally { document.body.removeChild(textarea); }
-    }
-
-    // --- Schedule Calendar Logic ---
-    function openScheduleModal(date) {
-      document.getElementById('schedule-date-input').value = date;
-      document.getElementById('schedule-title-input').value = '';
-      setScheduleFormType('Day1');
-      document.getElementById('schedule-modal').classList.remove('hidden');
-    }
-    
-    function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('hidden'); }
-    
-    function setScheduleFormType(type) {
-      scheduleFormType = type;
-      let html = '';
-      ['Day1', 'Day2', 'Day3', 'Day4'].forEach(t => {
-        const conf = MENU_CONFIG[t];
-        const btnClass = type === t ? conf.activeBtn : conf.inactiveBtn;
-        html += `<button onclick="setScheduleFormType('${t}')" class="py-2.5 rounded-lg font-bold text-xs transition-all ${btnClass}">${conf.label}</button>`;
-      });
-      document.getElementById('schedule-type-buttons').innerHTML = html;
-    }
-    
-    function saveSchedule() {
-      const date = document.getElementById('schedule-date-input').value;
-      const title = document.getElementById('schedule-title-input').value.trim() || `${MENU_CONFIG[scheduleFormType]?.label || scheduleFormType}予定`;
-      schedules.push({ id: generateUUID(), date, menuType: scheduleFormType, title, exercises: null });
-      saveData();
-      closeScheduleModal();
-      renderCalendar();
-    }
-
-    function executeSchedule(id) {
-      const sch = schedules.find(s => s.id === id);
-      if (sch) {
-        openRecordView(sch.date, sch.menuType, sch.exercises);
-      }
-    }
-
-    // --- Backup & Restore ---
-    function exportData() {
-      const dataString = JSON.stringify({ logs, schedules });
-      const textarea = document.createElement('textarea');
-      textarea.value = dataString;
-      textarea.style.position = 'fixed'; textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        openMessageModal('コピー完了', 'データをコピーしました。', 'success');
-      } catch (err) { openMessageModal('エラー', 'コピーに失敗しました。', 'error'); }
-      finally { document.body.removeChild(textarea); }
-    }
-
-    function importData() {
-      const textarea = document.getElementById('import-textarea');
-      const inputStr = textarea.value.trim();
-      if (!inputStr) return;
-      try {
-        const parsed = JSON.parse(inputStr);
-        if (Array.isArray(parsed)) {
-          logs = normalizeAndMergeLogs(parsed);
-        } else {
-          logs = normalizeAndMergeLogs(parsed.logs || []);
-          schedules = parsed.schedules || [];
-        }
-        saveData();
-        textarea.value = '';
-        changeView('HOME');
-        openMessageModal('復元完了', 'データの復元が完了しました。', 'success');
-      } catch (err) { openMessageModal('エラー', '読み込みに失敗しました。', 'error'); }
-    }
-
-    // --- Rendering ---
     function renderApp() {
       if (currentView === 'HOME') renderHome();
       else if (currentView === 'CALENDAR') renderCalendar();
@@ -801,391 +320,479 @@ ${JSON.stringify(pastLogs, null, 2)}
       lucide.createIcons();
     }
 
+    // ===== Modals =====
+    function openMessageModal(title, msg, status = 'error') {
+      const icon = document.getElementById('message-modal-icon');
+      if (status === 'error') {
+        icon.className = 'w-12 h-12 rounded-full bg-red-500/15 text-red-400 flex items-center justify-center mx-auto mb-4';
+        icon.innerHTML = '<i data-lucide="alert-circle" class="w-6 h-6"></i>';
+      } else {
+        icon.className = 'w-12 h-12 rounded-full bg-[#d9ff4a]/15 text-[#d9ff4a] flex items-center justify-center mx-auto mb-4';
+        icon.innerHTML = '<i data-lucide="check-circle-2" class="w-6 h-6"></i>';
+      }
+      document.getElementById('message-modal-title').textContent = title;
+      document.getElementById('message-modal-text').textContent = msg;
+      lucide.createIcons();
+      document.getElementById('message-modal').classList.remove('hidden');
+    }
+    function closeMessageModal() { document.getElementById('message-modal').classList.add('hidden'); }
+
+    function openDeleteModal(id, type = 'log') {
+      targetDeleteId = id; targetDeleteType = type;
+      document.getElementById('delete-modal').classList.remove('hidden');
+    }
+    function closeDeleteModal() { targetDeleteId = null; document.getElementById('delete-modal').classList.add('hidden'); }
+    function confirmDelete() {
+      if (targetDeleteId) {
+        if (targetDeleteType === 'log') logs = logs.filter(l => l.id !== targetDeleteId);
+        else schedules = schedules.filter(s => s.id !== targetDeleteId);
+        saveData();
+      }
+      closeDeleteModal();
+      renderApp();
+    }
+
+    // ===== HOME =====
     function renderHome() {
+      const now = new Date();
+      document.getElementById('home-date').innerHTML = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日<br>${WEEKDAYS[now.getDay()]}曜日`;
+
       const { bench, squat, dead, total } = getBig3Max();
-      const targetExercises = ['スクワット', 'ベンチプレス', 'デッドリフト', 'チンニング'];
-
-      let big3Html = `
-        <div class="bg-white/10 p-4 rounded-3xl border border-white/10 backdrop-blur-sm flex items-center justify-between mb-4">
-          <div class="text-xs font-bold text-neutral-400">BIG3 1RM 合計</div>
-          <div class="text-3xl font-black text-white tracking-tight">${total}<span class="text-xs font-normal text-neutral-400 ml-1">kg</span></div>
-        </div>
-        <div class="space-y-2">
-          <div class="flex items-center gap-2 text-sm font-bold text-neutral-400 mb-1">
-            <i data-lucide="dumbbell" class="w-4 h-4"></i> BIG3 最高換算値 (1RM)
+      const prCard = (label, data) => `
+        <div class="rounded-3xl bg-black/25 border border-white/[0.06] p-3.5">
+          <div class="text-[10px] font-black tracking-[0.2em] text-neutral-400">${label}</div>
+          <div class="text-[1.4rem] leading-tight font-black tnum mt-0.5">${data.max}<span class="text-[11px] font-bold text-neutral-500 ml-1">kg</span></div>
+          ${data.date ? `<div class="text-[10px] text-neutral-500 mt-1">${formatDate(data.date)}</div>` : '<div class="text-[10px] text-neutral-600 mt-1">—</div>'}
+        </div>`;
+      document.getElementById('home-pr').innerHTML = `
+        <section class="rounded-[1.75rem] p-5 bg-gradient-to-br from-[#1b1b26] via-[#14141d] to-[#10131a] border border-white/[0.07] shadow-[0_18px_44px_-18px_rgba(0,0,0,0.9)]">
+          <div class="flex items-end justify-between mb-4">
+            <div>
+              <div class="text-[10px] font-black tracking-[0.3em] text-neutral-400">BIG3 推定1RM</div>
+              <div class="text-4xl font-black tnum mt-1">${total}<span class="text-sm font-bold text-neutral-400 ml-1">kg 合計</span></div>
+            </div>
+            <i data-lucide="trophy" class="w-7 h-7 text-[#d9ff4a]"></i>
           </div>
-          <div class="grid grid-cols-3 gap-3">
-            <div class="bg-white/[0.07] p-3.5 rounded-3xl border border-white/10 backdrop-blur-sm relative flex flex-col justify-between">
-              <div>
-                <div class="text-xs text-neutral-400 font-medium mb-1">BENCH</div>
-                <div class="text-[1.35rem] font-black text-white">${bench.max}<span class="text-xs text-neutral-500 ml-1">kg</span></div>
-              </div>
-              ${bench.date ? `<div class="text-[10px] text-neutral-400 mt-2 flex items-center gap-1"><i data-lucide="calendar" class="w-2.5 h-2.5"></i>${formatDate(bench.date)}</div>` : ''}
-            </div>
-            <div class="bg-white/[0.07] p-3.5 rounded-3xl border border-white/10 backdrop-blur-sm relative flex flex-col justify-between">
-              <div>
-                <div class="text-xs text-neutral-400 font-medium mb-1">SQUAT</div>
-                <div class="text-[1.35rem] font-black text-white">${squat.max}<span class="text-xs text-neutral-500 ml-1">kg</span></div>
-              </div>
-              ${squat.date ? `<div class="text-[10px] text-neutral-400 mt-2 flex items-center gap-1"><i data-lucide="calendar" class="w-2.5 h-2.5"></i>${formatDate(squat.date)}</div>` : ''}
-            </div>
-            <div class="bg-white/[0.07] p-3.5 rounded-3xl border border-white/10 backdrop-blur-sm relative flex flex-col justify-between">
-              <div>
-                <div class="text-xs text-neutral-400 font-medium mb-1">DEAD</div>
-                <div class="text-[1.35rem] font-black text-white">${dead.max}<span class="text-xs text-neutral-500 ml-1">kg</span></div>
-              </div>
-              ${dead.date ? `<div class="text-[10px] text-neutral-400 mt-2 flex items-center gap-1"><i data-lucide="calendar" class="w-2.5 h-2.5"></i>${formatDate(dead.date)}</div>` : ''}
-            </div>
-          </div>
-        </div>
-      `;
-      document.getElementById('home-big3-container').innerHTML = big3Html;
+          <div class="grid grid-cols-3 gap-2.5">${prCard('BENCH', bench)}${prCard('SQUAT', squat)}${prCard('DEADLIFT', dead)}</div>
+        </section>`;
 
-      let recentHtml = `
+      // 直近10セッションのボリューム
+      const recent = [...logs].slice(0, 10).reverse();
+      if (recent.length) {
+        const maxVol = Math.max(1, ...recent.map(sessionVolume));
+        const bars = recent.map(log => {
+          const v = sessionVolume(log);
+          const h = Math.max(6, Math.round(v / maxVol * 100));
+          const isToday = log.date === getLocalDateStr();
+          return `<div class="flex-1 flex flex-col items-center gap-1.5 min-w-0">
+            <div class="w-full flex items-end h-20"><div class="w-full rounded-t-lg ${isToday ? 'bg-[#d9ff4a]' : 'bg-white/[0.18]'}" style="height:${h}%"></div></div>
+            <div class="text-[9px] font-bold text-neutral-500">${log.date.slice(5).replace('-', '/')}</div>
+          </div>`;
+        }).join('');
+        document.getElementById('home-chart').innerHTML = `
+          <section class="glass rounded-[1.75rem] p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="text-[10px] font-black tracking-[0.3em] text-neutral-400">VOLUME / 直近${recent.length}回</div>
+              <i data-lucide="bar-chart-3" class="w-4 h-4 text-neutral-500"></i>
+            </div>
+            <div class="flex gap-1.5">${bars}</div>
+          </section>`;
+      } else {
+        document.getElementById('home-chart').innerHTML = '';
+      }
+
+      // 直近の記録
+      const latest = logs.slice(0, 5);
+      const rows = latest.map(log => `
+        <button onclick="jumpToDay('${log.date}')" class="w-full text-left glass rounded-3xl p-4 active:scale-[0.99] transition-all">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-black">${prettyDate(log.date)}</span>
+            <span class="text-[11px] font-bold text-neutral-400 tnum">総ボリューム ${sessionVolume(log).toLocaleString()} kg</span>
+          </div>
+          <div class="text-sm text-neutral-400 truncate">${log.exercises.map(ex => escapeHtml(ex.name)).join(' ・ ')}</div>
+        </button>`).join('');
+      document.getElementById('home-recent').innerHTML = `
         <section>
-          <h2 class="text-sm font-bold text-neutral-500 mb-3 flex items-center gap-2">
-            <i data-lucide="activity" class="w-4 h-4 text-indigo-500"></i> 主要種目の直近記録
-          </h2>
-          ${createMenuSummaryHtml(targetExercises, 'indigo')}
-        </section>
-      `;
-      document.getElementById('home-recent-container').innerHTML = recentHtml;
+          <div class="text-[10px] font-black tracking-[0.3em] text-neutral-400 mb-3 px-1">RECENT</div>
+          <div class="space-y-2.5">${rows || '<div class="glass rounded-3xl p-6 text-center text-sm text-neutral-500">まだ記録がありません</div>'}</div>
+        </section>`;
+      lucide.createIcons();
     }
 
-    function createMenuSummaryHtml(targetExerciseNames, color) {
-      let exHtml = '';
-      targetExerciseNames.forEach(targetName => {
-        let latestRecord = null;
-        const searchNames = targetName === 'チンニング' ? ['チンニング', 'ハーフチンニング'] : [targetName];
-        for (const l of logs) {
-          const foundEx = l.exercises.find(e => searchNames.includes(e.name));
-          if (foundEx) { latestRecord = { ex: foundEx, date: l.date, menuType: l.menuType }; break; }
-        }
-        if (latestRecord) {
-          const { ex: latestEx, date: latestDate, menuType: type } = latestRecord;
-          const conf = MENU_CONFIG[type] || MENU_CONFIG['A'];
-          const hasMemo = latestEx.sets.some(s => s.memo);
-          const memos = latestEx.sets.filter(s => s.memo).map(s => s.memo).join(', ');
-          exHtml += `
-            <div class="text-sm py-2 border-b border-neutral-100 last:border-b-0">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-neutral-800">${escapeHtml(latestEx.name)}</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 ${conf.badgeClass}">
-                  <i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(latestDate)}
-                </span>
-              </div>
-              <div class="text-neutral-500 mt-1 pl-2 border-l-2 border-neutral-200 flex flex-wrap items-center gap-2">
-                <span>${latestEx.sets.length} sets</span>
-                ${hasMemo ? `<span class="text-[10px] bg-neutral-100 px-2 py-1 rounded-md text-neutral-600 truncate max-w-[200px]">${escapeHtml(memos)}</span>` : ''}
-              </div>
-            </div>
-          `;
-        }
-      });
-      return `<div class="bg-white p-5 rounded-[1.75rem] shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] border border-neutral-100 space-y-1">${exHtml || '<div class="text-xs text-neutral-400 text-center py-2">記録はありません</div>'}</div>`;
+    function jumpToDay(dateStr) {
+      selectedCalendarDate = dateStr;
+      const [y, m] = dateStr.split('-').map(Number);
+      currentCalendarMonth = new Date(y, m - 1, 1);
+      changeView('CALENDAR');
     }
 
+    // ===== CALENDAR =====
     function renderCalendar() {
-      const year = currentCalendarMonth.getFullYear();
-      const month = currentCalendarMonth.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      
+      const year = currentCalendarMonth.getFullYear(), month = currentCalendarMonth.getMonth();
+      const firstDay = new Date(year, month, 1), lastDay = new Date(year, month + 1, 0);
       const todayStr = getLocalDateStr();
+      const monthVols = logs.filter(l => l.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).map(sessionVolume);
+      const maxVol = Math.max(1, ...monthVols);
 
       let html = `
-        <div class="bg-white p-4 sm:p-5 rounded-[1.75rem] shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] border border-neutral-100">
+        <section class="glass rounded-[1.75rem] p-4 sm:p-5">
           <div class="flex items-center justify-between mb-4">
-            <button onclick="currentCalendarMonth.setMonth(currentCalendarMonth.getMonth()-1); renderCalendar();" class="p-2 text-neutral-500 hover:bg-neutral-100 rounded-full transition-colors">
-              <i data-lucide="chevron-left" class="w-5 h-5"></i>
-            </button>
-            <h2 class="text-base font-bold text-neutral-800">${year}年 ${month + 1}月</h2>
-            <button onclick="currentCalendarMonth.setMonth(currentCalendarMonth.getMonth()+1); renderCalendar();" class="p-2 text-neutral-500 hover:bg-neutral-100 rounded-full transition-colors">
-              <i data-lucide="chevron-right" class="w-5 h-5"></i>
-            </button>
+            <button onclick="moveMonth(-1)" class="p-2 rounded-full hover:bg-white/[0.06] transition-colors"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+            <div class="flex items-center gap-3">
+              <h2 class="text-lg font-black">${year}年 ${month + 1}月</h2>
+              <button onclick="backToToday()" class="text-[11px] font-black text-[#0b0b10] bg-[#d9ff4a] px-2.5 py-1 rounded-full active:scale-95 transition-all">今日</button>
+            </div>
+            <button onclick="moveMonth(1)" class="p-2 rounded-full hover:bg-white/[0.06] transition-colors"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
           </div>
-          
-          <div class="grid grid-cols-7 gap-1 text-center mb-2">
-            ${['日', '月', '火', '水', '木', '金', '土'].map((d, i) => `<div class="text-[10px] font-bold ${i===0?'text-red-400':i===6?'text-blue-400':'text-neutral-400'}">${d}</div>`).join('')}
+          <div class="grid grid-cols-7 gap-1 text-center mb-1.5">
+            ${WEEKDAYS.map((d, i) => `<div class="text-[10px] font-black ${i === 0 ? 'text-red-400' : i === 6 ? 'text-sky-400' : 'text-neutral-500'}">${d}</div>`).join('')}
           </div>
-          
-          <div class="grid grid-cols-7 gap-1 text-center">
-      `;
-
-      for (let i = 0; i < firstDay.getDay(); i++) html += `<div class="p-2"></div>`;
-
-      for (let i = 1; i <= lastDay.getDate(); i++) {
-        const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        
-        let markerHtml = '<div class="flex justify-center gap-0.5 mt-0.5 h-1 flex-wrap w-full px-1">';
-        
-        const dLogs = logs.filter(l => l.date === dStr);
-        [...new Set(dLogs.map(l => l.menuType))].forEach(type => {
-          const conf = MENU_CONFIG[type] || MENU_CONFIG['A'];
-          markerHtml += `<span class="w-1.5 h-1.5 rounded-full ${conf.marker}"></span>`;
-        });
-        
-        const dSchs = schedules.filter(s => s.date === dStr);
-        [...new Set(dSchs.map(s => s.menuType))].forEach(type => {
-          const conf = MENU_CONFIG[type] || MENU_CONFIG['A'];
-          markerHtml += `<span class="w-1.5 h-1.5 rounded-full border ${conf.markerOutline}"></span>`;
-        });
-        
-        markerHtml += '</div>';
-
-        const isToday = dStr === todayStr;
-        const isSelected = dStr === selectedCalendarDate;
-        let dayClass = 'p-2 min-h-[3.4rem] flex flex-col items-center justify-center rounded-2xl cursor-pointer text-sm transition-all active:scale-95 ';
-        
-        if (isSelected) dayClass += ' calendar-day-active ';
-        else if (isToday) dayClass += ' calendar-day-today hover:bg-neutral-100 ';
-        else dayClass += ' hover:bg-neutral-100 ';
-
+          <div class="grid grid-cols-7 gap-1">`;
+      for (let i = 0; i < firstDay.getDay(); i++) html += '<div></div>';
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayLogs = logsOn(dStr);
+        const vol = dayLogs.reduce((a, l) => a + sessionVolume(l), 0);
+        const hasSch = schedules.some(s => s.date === dStr);
+        let cls = 'relative p-1.5 min-h-[3.3rem] rounded-2xl flex flex-col items-center justify-start cursor-pointer transition-all active:scale-95 ';
+        if (dStr === selectedCalendarDate) cls += 'cal-selected ';
+        else if (vol > 0) cls += (vol / maxVol >= 0.6 ? 'cal-has-strong ' : 'cal-has ');
+        else cls += 'hover:bg-white/[0.05] ';
+        if (dStr === todayStr && dStr !== selectedCalendarDate) cls += 'ring-1 ring-[#d9ff4a]/70 ';
         html += `
-          <div class="${dayClass}" onclick="selectedCalendarDate='${dStr}'; renderCalendar();">
-            <span class="font-medium">${i}</span>
-            ${markerHtml}
-          </div>
-        `;
+          <div class="${cls}" onclick="selectedCalendarDate='${dStr}'; renderCalendar(); lucide.createIcons();">
+            <span class="text-sm font-bold leading-tight">${d}</span>
+            ${vol > 0 ? `<span class="cal-vol text-[8.5px] font-bold text-[#d9ff4a]/80 tnum mt-0.5">${Math.round(vol / 100) / 10}t</span>` : ''}
+            ${hasSch ? '<span class="absolute bottom-1.5 w-1 h-1 rounded-full bg-sky-400"></span>' : ''}
+          </div>`;
       }
-      html += `</div></div>`;
+      html += `</div></section>`;
 
-      const dateLogs = logs.filter(l => l.date === selectedCalendarDate);
-      const dateSchs = schedules.filter(s => s.date === selectedCalendarDate);
-
-      html += `<div class="mt-6 flex items-center justify-between mb-3">
-                 <h3 class="text-sm font-bold text-neutral-500 flex items-center gap-2">
-                   <i data-lucide="bookmark" class="w-4 h-4"></i> ${formatDate(selectedCalendarDate)} の記録と予定
-                 </h3>
-                 <button onclick="openScheduleModal('${selectedCalendarDate}')" class="text-xs bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-200 transition-colors flex items-center gap-1 shadow-sm">
-                   <i data-lucide="plus" class="w-3 h-3"></i> 予定追加
-                 </button>
-               </div>`;
-
-      if (dateLogs.length === 0 && dateSchs.length === 0) {
-        html += `<div class="bg-white p-6 rounded-[1.75rem] shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] text-center text-sm text-neutral-400 border border-neutral-100">この日の予定・記録はありません</div>`;
-      } else {
-        html += `<div class="space-y-4">`;
-        
-        dateLogs.forEach(log => {
-          const conf = MENU_CONFIG[log.menuType] || MENU_CONFIG['A'];
-          let exHtml = '';
-          log.exercises.forEach(ex => {
-            let setsHtml = '';
-            ex.sets.forEach((set, i) => {
-              setsHtml += `
-                <div class="flex items-center gap-3 text-neutral-600 pl-2 border-l-2 border-neutral-100">
-                  <span class="w-4 text-[10px] sm:text-xs text-neutral-400 text-center">${i + 1}</span>
-                  <span class="font-bold text-sm">${escapeHtml(set.weight)}kg <span class="font-normal mx-0.5 text-xs">×</span> ${escapeHtml(set.reps)}</span>
-                  ${set.memo ? `<span class="text-[10px] bg-neutral-100 px-2 py-0.5 rounded text-neutral-500 truncate max-w-[120px] sm:max-w-[200px]">${escapeHtml(set.memo)}</span>` : ''}
-                </div>
-              `;
-            });
-            exHtml += `
-              <div class="text-sm">
-                <div class="font-bold text-neutral-800 flex items-center justify-between mb-1.5">
-                  <span>${escapeHtml(ex.name)}</span>
-                  <span class="text-[10px] text-neutral-400 font-normal">${ex.sets.length} sets</span>
-                </div>
-                <div class="space-y-1">${setsHtml}</div>
-              </div>
-            `;
-          });
-
-          html += `
-            <div class="bg-white p-5 rounded-[1.75rem] shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] border border-neutral-100">
-              <div class="flex items-center justify-between mb-4 border-b border-neutral-100 pb-3">
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold ${conf.badgeClass}">
-                    ${conf.label} (記録済)
-                  </span>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                  <button onclick="editLog('${log.id}')" class="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                  <button onclick="openDeleteModal('${log.id}', 'log')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>
-              </div>
-              <div class="space-y-5">
-                ${exHtml}
+      // 選択日の詳細
+      const dayLogs = logsOn(selectedCalendarDate);
+      const daySchs = schedules.filter(s => s.date === selectedCalendarDate);
+      html += `<section>
+        <div class="flex items-center justify-between mb-3 px-1">
+          <h3 class="font-black">${prettyDate(selectedCalendarDate)} の記録</h3>
+          <button onclick="openRecordView('${selectedCalendarDate}')" class="text-[11px] font-black text-[#0b0b10] bg-[#d9ff4a] px-3 py-1.5 rounded-full active:scale-95 transition-all flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> 記録する</button>
+        </div>`;
+      if (!dayLogs.length && !daySchs.length) {
+        html += '<div class="glass rounded-3xl p-6 text-center text-sm text-neutral-500">この日の記録はありません</div>';
+      }
+      daySchs.forEach(s => {
+        html += `
+          <div class="glass rounded-3xl p-4 mb-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-sm"><i data-lucide="bookmark" class="w-4 h-4 text-sky-400"></i><span class="font-bold">${escapeHtml(s.title || '予定')}</span><span class="text-[10px] font-black text-sky-300 bg-sky-400/10 px-2 py-0.5 rounded-full">予定</span></div>
+            <button onclick="openDeleteModal('${s.id}', 'schedule')" class="p-1.5 text-neutral-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </div>`;
+      });
+      dayLogs.forEach(log => {
+        const exHtml = log.exercises.map(ex => `
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-black">${escapeHtml(ex.name)}</span>
+              <span class="text-[10px] font-bold text-neutral-500">${ex.sets.length} sets</span>
+            </div>
+            <div class="space-y-1">
+              ${ex.sets.map((s, i) => `
+                <div class="flex items-center gap-3 text-sm text-neutral-300 pl-2 border-l-2 border-white/[0.08]">
+                  <span class="w-4 text-[10px] text-neutral-500 text-center tnum">${i + 1}</span>
+                  <span class="font-bold tnum">${escapeHtml(s.weight)}kg <span class="font-normal text-xs text-neutral-500">×</span> ${escapeHtml(s.reps)}</span>
+                  <span class="text-[10px] font-bold text-neutral-500">1RM ${calculate1RM(s.weight, s.reps) || '—'}</span>
+                  ${s.memo ? `<span class="text-[10px] bg-white/[0.06] px-2 py-0.5 rounded-md text-neutral-400 truncate max-w-[130px]">${escapeHtml(s.memo)}</span>` : ''}
+                </div>`).join('')}
+            </div>
+          </div>`).join('<div class="border-t border-white/[0.05] my-3.5"></div>');
+        html += `
+          <div class="glass rounded-[1.75rem] p-5 mb-2.5">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[11px] font-bold text-neutral-400 tnum">総ボリューム ${sessionVolume(log).toLocaleString()} kg</span>
+              <div class="flex items-center gap-1">
+                <button onclick="editLog('${log.id}')" class="p-2 text-[#d9ff4a] hover:bg-white/[0.06] rounded-xl transition-colors"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                <button onclick="openDeleteModal('${log.id}', 'log')" class="p-2 text-red-400 hover:bg-white/[0.06] rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
               </div>
             </div>
-          `;
-        });
-
-        dateSchs.forEach(s => {
-          const conf = MENU_CONFIG[s.menuType] || MENU_CONFIG['A'];
-          html += `
-            <div class="bg-white p-4 rounded-3xl shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] border border-neutral-100 flex flex-col gap-3 relative overflow-hidden">
-              <div class="absolute left-0 top-0 bottom-0 w-1.5 ${conf.marker}"></div>
-              <div class="flex items-start justify-between">
-                <div class="pl-2">
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md mb-1 inline-block ${conf.badgeClass}">${conf.label} (予定)</span>
-                  <div class="font-bold text-neutral-800 text-sm mt-1">${escapeHtml(s.title)}</div>
-                </div>
-                <button onclick="openDeleteModal('${s.id}', 'schedule')" class="p-1.5 text-neutral-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-              </div>
-              <div class="pl-2 mt-1">
-                <button onclick="executeSchedule('${s.id}')" class="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-1">
-                  <i data-lucide="play" class="w-4 h-4"></i> この予定で記録を開始
-                </button>
-              </div>
-            </div>
-          `;
-        });
-        html += `</div>`;
-      }
-      
+            <div>${exHtml}</div>
+          </div>`;
+      });
+      html += '</section>';
       document.getElementById('calendar-content').innerHTML = html;
     }
 
-    function renderRecord() {
-      document.getElementById('record-view-title').textContent = editingLogId ? 'トレーニングを編集' : 'トレーニングを記録';
-      const content = document.getElementById('record-content');
-      
-      let typeButtonsHtml = '';
-      ['Day1', 'Day2', 'Day3', 'Day4'].forEach(t => {
-        const conf = MENU_CONFIG[t];
-        const btnClass = menuType === t ? conf.activeBtn : conf.inactiveBtn;
-        typeButtonsHtml += `<button onclick="changeMenuType('${t}')" class="py-3.5 px-2 rounded-2xl font-bold text-[11px] sm:text-xs transition-all active:scale-[0.97] ${btnClass}">${conf.label}</button>`;
-      });
-
-      let html = `
-        <div class="bg-white p-4 rounded-3xl shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] border border-neutral-100 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-neutral-500 mb-1">日付</label>
-            <input type="date" id="record-date-input" value="${escapeHtml(recordDate)}" class="w-full p-3 bg-neutral-100 rounded-xl border-none focus:ring-2 focus:ring-indigo-500 font-bold text-neutral-700" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-neutral-500 mb-2">メニュータイプ (Texas Method)</label>
-            <div class="grid grid-cols-2 gap-2">
-              ${typeButtonsHtml}
-            </div>
-          </div>
-        </div>
-      `;
-
-      exercises.forEach(ex => {
-        let setsHtml = '';
-        ex.sets.forEach((set, setIndex) => {
-          const oneRm = calculate1RM(set.weight, set.reps) || '-';
-          setsHtml += `
-            <div class="flex items-center gap-2 bg-neutral-50 p-2 rounded-2xl border border-neutral-100">
-              <div class="w-8 sm:w-12 font-bold text-neutral-400 pl-1 text-center shrink-0">${setIndex + 1}</div>
-              <input type="number" placeholder="0" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="weight" value="${escapeHtml(set.weight)}" class="update-set w-16 sm:w-20 p-2.5 text-center font-bold bg-white border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-500 shrink-0" />
-              <input type="number" placeholder="0" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="reps" value="${escapeHtml(set.reps)}" class="update-set w-16 sm:w-20 p-2.5 text-center font-bold bg-white border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-500 shrink-0" />
-              <div id="1rm-${set.id}" class="w-12 sm:w-16 text-center font-bold text-indigo-600 shrink-0 text-xs sm:text-sm">${oneRm}</div>
-              <input type="text" placeholder="メモ" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="memo" value="${escapeHtml(set.memo)}" class="update-set flex-1 p-2.5 bg-white border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm min-w-[60px]" />
-              <button onclick="removeSet('${ex.id}', '${set.id}')" class="p-1 text-neutral-400 hover:text-red-500 shrink-0">
-                <i data-lucide="x" class="w-5 h-5"></i>
-              </button>
-            </div>
-          `;
-        });
-
-        let toggleBtn = '';
-        if (['チンニング', 'ハーフチンニング'].includes(ex.name)) {
-          const newName = ex.name === 'チンニング' ? 'ハーフチンニング' : 'チンニング';
-          const label = ex.name === 'チンニング' ? 'ハーフへ' : 'フルへ';
-          toggleBtn = `<button onclick="updateExerciseNameDirectly('${ex.id}', '${newName}')" class="text-[10px] sm:text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1.5 rounded-lg whitespace-nowrap transition-colors border border-indigo-200 shadow-sm">${label}</button>`;
-        }
-
-        html += `
-          <div class="bg-white p-4 sm:p-5 rounded-[1.75rem] shadow-[0_2px_18px_-6px_rgba(0,0,0,0.14)] space-y-4 border border-neutral-100">
-            <div class="flex items-center justify-between gap-2 border-b border-neutral-100 pb-2">
-              <input type="text" placeholder="種目名" data-ex-id="${ex.id}" value="${escapeHtml(ex.name)}" class="update-ex-name flex-1 text-base sm:text-lg font-bold p-1 bg-transparent border-b-2 border-transparent focus:border-indigo-500 focus:outline-none transition-colors" />
-              <div class="flex items-center gap-1 shrink-0">
-                ${toggleBtn}
-                <button onclick="removeExercise('${ex.id}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-colors">
-                  <i data-lucide="trash-2" class="w-5 h-5"></i>
-                </button>
-              </div>
-            </div>
-            
-            <div class="space-y-2 overflow-x-auto pb-1">
-              <div class="flex min-w-max text-[10px] sm:text-xs font-bold text-neutral-400 px-1">
-                <div class="w-8 sm:w-12 text-center">SET</div>
-                <div class="w-16 sm:w-20 text-center">KG</div>
-                <div class="w-16 sm:w-20 text-center">REPS</div>
-                <div class="w-12 sm:w-16 text-center">1RM</div>
-                <div class="flex-1 ml-2 min-w-[60px]">MEMO</div>
-              </div>
-              <div class="min-w-max space-y-2">
-                ${setsHtml}
-              </div>
-            </div>
-            <button onclick="addSet('${ex.id}')" class="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-neutral-500 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-colors">
-              <i data-lucide="plus" class="w-4 h-4"></i> セットを追加
-            </button>
-          </div>
-        `;
-      });
-
-      // テンプレート追加ボタンと空の種目追加ボタン
-      html += `
-        <div class="space-y-3">
-          <button onclick="openTemplateModal()" class="w-full py-4 flex items-center justify-center gap-2 text-emerald-600 font-bold border-2 border-dashed border-emerald-300 hover:bg-emerald-50 rounded-2xl transition-colors shadow-sm">
-            <i data-lucide="list-plus" class="w-6 h-6"></i> 補助種目をテンプレから追加
-          </button>
-          <button onclick="addExercise()" class="w-full py-4 flex items-center justify-center gap-2 text-indigo-600 font-bold border-2 border-dashed border-indigo-200 hover:bg-indigo-50 rounded-2xl transition-colors shadow-sm">
-            <i data-lucide="plus-circle" class="w-6 h-6"></i> 空の種目を追加
-          </button>
-        </div>
-      `;
-
-      html += `
-        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-3xl shadow-sm border border-indigo-100 space-y-4 mt-2">
-          <div class="flex items-center gap-2 text-indigo-800 font-bold text-lg">
-            <i data-lucide="bot" class="text-indigo-600 w-6 h-6"></i>
-            AIコーチに評価＆次回メニュー提案を依頼
-          </div>
-          <p class="text-sm text-indigo-600/80 leading-relaxed">
-            クラスターセット法の観点から本日の記録の「良かった点・改善点」の分析と、次回Day〇のクラスター構成（重量・レップ数・休息）とおすすめ日程を出力する指示書を作成します。
-          </p>
-          <button onclick="openPeriodizationModal()" class="w-full py-3.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-            <i data-lucide="copy" class="w-5 h-5"></i> 指示書（プロンプト）を作成
-          </button>
-        </div>
-      `;
-
-      html += `
-        <button onclick="saveLog()" class="w-full py-4 bg-neutral-900 text-white text-base font-bold rounded-2xl shadow-lg shadow-neutral-900/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-          <i data-lucide="save" class="w-5 h-5"></i> 保存する
-        </button>
-      `;
-
-      content.innerHTML = html;
+    function moveMonth(delta) { currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + delta); renderCalendar(); lucide.createIcons(); }
+    function backToToday() {
+      selectedCalendarDate = getLocalDateStr();
+      currentCalendarMonth = new Date(); currentCalendarMonth.setDate(1);
+      renderCalendar(); lucide.createIcons();
     }
 
-    // --- Init ---
-    document.addEventListener('DOMContentLoaded', () => {
-      loadData();
+// ===== RECORD =====
+const createEmptySet = () => ({ id: generateUUID(), weight: '', reps: '', memo: ''});
 
-      document.getElementById('record-content').addEventListener('input', (e) => {
-        if (e.target.matches('.update-set')) {
-          const exId = e.target.dataset.exId;
-          const setId = e.target.dataset.setId;
-          const field = e.target.dataset.field;
-          const ex = exercises.find(e => e.id === exId);
-          const set = ex.sets.find(s => s.id === setId);
-          if (set) {
-            set[field] = e.target.value;
-            if (field === 'weight' || field === 'reps') {
-              const oneRm = calculate1RM(set.weight, set.reps) || '-';
-              const rmDisplay = document.getElementById(`1rm-${setId}`);
-              if (rmDisplay) rmDisplay.textContent = oneRm;
-            }
-          }
-        } else if (e.target.matches('.update-ex-name')) {
-          const exId = e.target.dataset.exId;
-          const ex = exercises.find(e => e.id === exId);
-          if (ex) ex.name = e.target.value;
-        } else if (e.target.matches('#record-date-input')) {
-          recordDate = e.target.value;
-        }
-      });
-      
-      changeView('HOME');
-    });
-  </script>
+function openRecordView(dateStr = null) {
+const date = dateStr || getLocalDateStr();
+const existing = logsOn(date)[0];
+if (existing) { editLog(existing.id); return;}
+editingLogId = null;
+recordDate = date;
+exercises = [];
+changeView('RECORD');
+}
+
+function editLog(logId) {
+const log = logs.find(l => l.id === logId);
+if (!log) return;
+editingLogId = logId;
+recordDate = log.date;
+exercises = JSON.parse(JSON.stringify(log.exercises));
+changeView('RECORD');
+}
+
+function exerciseOptionsHtml(currentName) {
+const names = [...EXERCISE_LIBRARY];
+if (currentName &&!names.includes(currentName) && currentName!== '') names.unshift(currentName);
+const opts = names.map(n => `<option value="${escapeHtml(n)}" ${n === currentName? 'selected': ''}>${escapeHtml(n)}</option>`).join('');
+const isCustom = currentName &&!EXERCISE_LIBRARY.includes(currentName);
+return opts + `<option value="${CUSTOM_OPTION}" ${isCustom? 'selected': ''}>カスタム（自由入力）</option>`;
+}
+
+function setsFromHistory(name) {
+const prev = lastSetFor(name);
+if (prev) return prev.ex.sets.map(s => ({ id: generateUUID(), weight: s.weight, reps: s.reps, memo: ''}));
+return Array.from({ length: 3}, createEmptySet);
+}
+
+function addExerciseFromPicker() {
+const sel = document.getElementById('add-exercise-select');
+if (!sel) return;
+let name = sel.value;
+if (name === CUSTOM_OPTION) {
+name = (document.getElementById('add-exercise-custom').value || '').trim();
+if (!name) { openMessageModal('入力エラー', '種目名を入力してください。', 'error'); return;}
+}
+exercises.push({ id: generateUUID(), name, sets: setsFromHistory(name)});
+renderRecord();
+lucide.createIcons();
+}
+
+function removeExercise(exId) { exercises = exercises.filter(ex => ex.id!== exId); renderRecord(); lucide.createIcons();}
+function addSet(exId) { const ex = exercises.find(e => e.id === exId); if (ex) { ex.sets.push(createEmptySet()); renderRecord(); lucide.createIcons();}}
+function removeSet(exId, setId) { const ex = exercises.find(e => e.id === exId); if (ex) { ex.sets = ex.sets.filter(s => s.id!== setId); renderRecord(); lucide.createIcons();}}
+
+function renderRecord() {
+document.getElementById('record-view-title').textContent = editingLogId? '記録を編集': '記録する';
+const content = document.getElementById('record-content');
+const selectStyle = `background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 0.7rem center;`;
+
+let html = `
+<div class="glass rounded-3xl p-4 flex items-center justify-between">
+<label class="text-sm font-bold text-neutral-400">日付</label>
+<input type="date" id="record-date-input" value="${escapeHtml(recordDate)}" class="p-2.5 bg-black/30 rounded-xl border border-white/[0.08] font-black focus:ring-2 focus:ring-[#d9ff4a]/60 [color-scheme:dark]" />
+</div>`;
+
+exercises.forEach(ex => {
+const isCustom = ex.name &&!EXERCISE_LIBRARY.includes(ex.name);
+const setsHtml = ex.sets.map((set, i) => `
+<div class="flex items-center gap-2 bg-black/25 p-2 rounded-2xl border border-white/[0.05]">
+<div class="w-6 text-center font-black text-neutral-500 text-sm tnum shrink-0">${i + 1}</div>
+<input type="number" inputmode="decimal" placeholder="kg" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="weight" value="${escapeHtml(set.weight)}" class="update-set w-[4.2rem] sm:w-20 p-2.5 text-center font-black bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-[#d9ff4a]/60 shrink-0" />
+<input type="number" inputmode="numeric" placeholder="回" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="reps" value="${escapeHtml(set.reps)}" class="update-set w-[3.6rem] sm:w-[4.5rem] p-2.5 text-center font-black bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-[#d9ff4a]/60 shrink-0" />
+<div id="1rm-${set.id}" class="w-11 text-center font-black text-[#d9ff4a] shrink-0 text-xs tnum">${calculate1RM(set.weight, set.reps) || '—'}</div>
+<input type="text" placeholder="メモ" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="memo" value="${escapeHtml(set.memo)}" class="update-set flex-1 p-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-[#d9ff4a]/60 text-sm min-w-[52px]" />
+<button onclick="removeSet('${ex.id}', '${set.id}')" class="p-1 text-neutral-500 hover:text-red-400 shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
+</div>`).join('');
+html += `
+<div class="glass rounded-[1.75rem] p-4 sm:p-5 space-y-3.5">
+<div class="flex items-center gap-2">
+<div class="flex-1 min-w-0">
+<select data-ex-id="${ex.id}" class="ex-name-select w-full p-2.5 pr-9 bg-black/30 border border-white/[0.08] rounded-xl font-black focus:ring-2 focus:ring-[#d9ff4a]/60" style="${selectStyle}">${exerciseOptionsHtml(ex.name)}</select>
+${isCustom? `<input type="text" placeholder="種目名を入力" data-ex-id="${ex.id}" value="${escapeHtml(ex.name)}" class="ex-name-custom w-full mt-2 p-2.5 bg-black/30 border border-white/[0.08] rounded-xl font-bold focus:ring-2 focus:ring-[#d9ff4a]/60" />`: ''}
+</div>
+<button onclick="removeExercise('${ex.id}')" class="p-2 text-red-400 hover:bg-white/[0.06] rounded-full shrink-0"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+</div>
+<div class="space-y-2">
+<div class="flex text-[9px] font-black tracking-wider text-neutral-500 px-1 gap-2">
+<div class="w-6 text-center">SET</div><div class="w-[4.2rem] sm:w-20 text-center">KG</div><div class="w-[3.6rem] sm:w-[4.5rem] text-center">REPS</div><div class="w-11 text-center">1RM</div><div class="flex-1 pl-1">MEMO</div>
+</div>
+${setsHtml}
+</div>
+<button onclick="addSet('${ex.id}')" class="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-neutral-300 bg-white/[0.05] hover:bg-white/[0.09] rounded-2xl transition-all active:scale-[0.98]"><i data-lucide="plus" class="w-4 h-4"></i> セットを追加</button>
+</div>`;
+});
+
+html += `
+<div class="rounded-[1.75rem] p-4 sm:p-5 border-2 border-dashed border-[#d9ff4a]/30 bg-[#d9ff4a]/[0.03] space-y-3">
+<div class="text-sm font-black flex items-center gap-2"><i data-lucide="list-plus" class="w-5 h-5 text-[#d9ff4a]"></i> 種目を追加</div>
+<select id="add-exercise-select" onchange="document.getElementById('add-exercise-custom').classList.toggle('hidden', this.value!== '${CUSTOM_OPTION}')" class="w-full p-3 pr-9 bg-black/30 border border-white/[0.08] rounded-xl font-black focus:ring-2 focus:ring-[#d9ff4a]/60" style="${selectStyle}">
+${EXERCISE_LIBRARY.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
+<option value="${CUSTOM_OPTION}">カスタム（自由入力）</option>
+</select>
+<input type="text" id="add-exercise-custom" placeholder="種目名を入力" class="hidden w-full p-3 bg-black/30 border border-white/[0.08] rounded-xl font-bold focus:ring-2 focus:ring-[#d9ff4a]/60" />
+<button onclick="addExerciseFromPicker()" class="w-full py-3.5 bg-[#d9ff4a] text-[#0b0b10] font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i> この種目を追加</button>
+<p class="text-[11px] text-neutral-500">過去に記録した種目は、前回のセット構成を引き継ぎます。</p>
+</div>
+
+<div class="rounded-[1.75rem] p-5 bg-gradient-to-br from-[#1b1b26] to-[#10131a] border border-white/[0.07] space-y-3">
+<div class="flex items-center gap-2 font-black"><i data-lucide="bot" class="w-5 h-5 text-[#d9ff4a]"></i> AIコーチに評価を依頼</div>
+<p class="text-sm text-neutral-400 leading-relaxed">クラスターセット法の観点から本日の記録の分析と、次回のクラスター構成・おすすめ間隔を提案するプロンプトを作成します。</p>
+<button onclick="openPhaseModal()" class="w-full py-3.5 bg-white/[0.07] hover:bg-white/[0.12] font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-white/[0.08]"><i data-lucide="copy" class="w-4 h-4"></i> プロンプトを作成</button>
+</div>
+
+<button onclick="saveLog()" class="w-full py-4 bg-[#d9ff4a] text-[#0b0b10] text-base font-black rounded-3xl shadow-[0_14px_36px_-10px_rgba(217,255,74,0.55)] active:scale-[0.98] transition-all flex items-center justify-center gap-2"><i data-lucide="check" class="w-5 h-5"></i> 保存する</button>`;
+
+content.innerHTML = html;
+}
+
+function saveLog() {
+const cleaned = exercises.map(ex => {
+let name = (ex.name || '').trim();
+const validSets = ex.sets.filter(s => s.weight!== '' || s.reps!== '');
+if (name === '' && validSets.length > 0) name = '名称未設定種目';
+return { id: ex.id, name, sets: validSets};
+}).filter(ex => ex.name!== '' && ex.sets.length > 0);
+
+if (!cleaned.length) { openMessageModal('入力エラー', '記録する内容がありません。（重量または回数を入力してください）', 'error'); return;}
+
+const prev = editingLogId? logs.find(l => l.id === editingLogId): null;
+const logData = { id: editingLogId || generateUUID(), date: recordDate, menuType: prev? prev.menuType: 'Free', exercises: cleaned};
+if (editingLogId) logs = logs.map(l => l.id === editingLogId? logData: l);
+else logs.push(logData);
+logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+saveData();
+editingLogId = null;
+selectedCalendarDate = recordDate;
+const [y, m] = recordDate.split('-').map(Number);
+currentCalendarMonth = new Date(y, m - 1, 1);
+changeView('CALENDAR');
+}
+
+// ===== AI COACH (クラスターセット法) =====
+function openPhaseModal() { document.getElementById('phase-modal').classList.remove('hidden');}
+function closePhaseModal() { document.getElementById('phase-modal').classList.add('hidden');}
+
+function generateAndCopyPrompt(periodization) {
+const currentLogData = { date: recordDate, exercises};
+const pastLogs = logs.filter(l => l.id!== editingLogId);
+const { bench, squat, dead} = getBig3Max();
+
+const prompt = `あなたはNSCA-CSCS（ストレングス＆コンディショニングスペシャリスト）の資格を持つ、プロフェッショナルな高レベルトレーナーです。
+クライアントはクラスターセット法でトレーニングを行っています。メイン種目は「数レップごとに短い休息（レップ間休息）を挟むクラスター形式」で実施し、疲労を抑えながら高重量・高品質なレップを積み重ねることが狙いです。
+ログの見方：同一種目の連続したセットは、クラスターを構成する小セットとして解釈してください。メモ欄に休息時間やRPEなどが書かれている場合は、それも判断材料にしてください。
+
+
+・日付: ${recordDate}
+・実施内容:
+${JSON.stringify(currentLogData, null, 2)}
+
+
+・目的（ピリオダイゼーション）: ${periodization}期
+・推定1RM最高値: SQ=${squat.max}kg, BP=${bench.max}kg, DL=${dead.max}kg
+
+
+${JSON.stringify(pastLogs, null, 2)}
+
+---
+
+###
+
+1. **クラスターセット法の観点からのフィードバック（詳細）**
+- 本日の内容について、重量（推定1RMに対する％）、1クラスターあたりのレップ数、クラスター数、レップ間休息の取り方が、クラスターセット法として適正だったかを分析してください。
+- **良かった点**（疲労を抑えて高品質なレップを積めたか、神経系・運動生理学の観点から）
+- **改善点・懸念点**（後半クラスターでの出力低下の兆し、休息不足、重量設定の過不足、オーバートレーニングリスクなど）
+- ${periodization}期のクラスター構成として適正だったかを、具体的に客観評価してください。
+
+2. **次回の構成と日程のアドバイス**
+- 記録の日付（${recordDate}）とこれまでのトレーニング頻度・疲労蓄積度から、**次回は何日（YYYY-MM-DD）に実施するのが最適か**、推奨日を出してください。
+- 本日の各種目について、次回行う際の重量（2.5kg単位で丸める）、1クラスターあたりのレップ数、クラスター数、レップ間休息（秒）、クラスター間休息（分）を具体的に提示してください。
+- 補助種目については、通常セットでの重量・レップ数・セット数を提示してください。
+
+回答は文章のみで構いません。JSONなどの機械可読フォーマットは不要です。`;
+
+const done = () => { closePhaseModal(); openMessageModal('コピーしました', 'クラスターセット法に基づく分析＆次回構成のアドバイス用プロンプトをコピーしました！Geminiにそのまま貼り付けてください。', 'success');};
+if (navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(prompt).then(done).catch(() => fallbackCopy(prompt, done));
+} else fallbackCopy(prompt, done);
+}
+
+function fallbackCopy(text, done) {
+const textarea = document.createElement('textarea');
+textarea.value = text;
+textarea.style.position = 'fixed'; textarea.style.opacity = '0';
+document.body.appendChild(textarea);
+textarea.select();
+try { document.execCommand('copy'); done();}
+catch (err) { openMessageModal('エラー', 'コピーに失敗しました。', 'error');}
+finally { document.body.removeChild(textarea);}
+}
+
+// ===== Backup / Restore =====
+function exportData(mode) {
+const dataString = JSON.stringify({ logs, schedules});
+if (mode === 'file') {
+const blob = new Blob([dataString], { type: 'application/json'});
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = `forge-backup-${getLocalDateStr().replace(/-/g, '')}.json`;
+document.body.appendChild(a); a.click(); a.remove();
+setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+openMessageModal('書き出しました', 'バックアップファイルをダウンロードしました。', 'success');
+} else {
+const done = () => openMessageModal('コピー完了', 'データをコピーしました。', 'success');
+if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(dataString).then(done).catch(() => fallbackCopy(dataString, done));
+else fallbackCopy(dataString, done);
+}
+}
+
+function importData() {
+const textarea = document.getElementById('import-textarea');
+const inputStr = textarea.value.trim();
+if (!inputStr) return;
+try {
+const parsed = JSON.parse(inputStr);
+if (Array.isArray(parsed)) { logs = parsed.map(normalizeLog);}
+else { logs = (parsed.logs || []).map(normalizeLog); schedules = parsed.schedules || [];}
+logs = logs.filter(l => l.date).sort((a, b) => new Date(b.date) - new Date(a.date));
+saveData();
+textarea.value = '';
+changeView('HOME');
+openMessageModal('復元完了', 'データの復元が完了しました。', 'success');
+} catch (err) { openMessageModal('エラー', '読み込みに失敗しました。', 'error');}
+}
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+loadData();
+const recordContent = document.getElementById('record-content');
+recordContent.addEventListener('input', (e) => {
+if (e.target.matches('.update-set')) {
+const ex = exercises.find(x => x.id === e.target.dataset.exId);
+const set = ex && ex.sets.find(s => s.id === e.target.dataset.setId);
+if (set) {
+set[e.target.dataset.field] = e.target.value;
+if (e.target.dataset.field === 'weight' || e.target.dataset.field === 'reps') {
+const disp = document.getElementById(`1rm-${e.target.dataset.setId}`);
+if (disp) disp.textContent = calculate1RM(set.weight, set.reps) || '—';
+}
+}
+} else if (e.target.matches('.ex-name-custom')) {
+const ex = exercises.find(x => x.id === e.target.dataset.exId);
+if (ex) ex.name = e.target.value;
+} else if (e.target.matches('#record-date-input')) {
+recordDate = e.target.value;
+}
+});
+recordContent.addEventListener('change', (e) => {
+if (e.target.matches('.ex-name-select')) {
+const ex = exercises.find(x => x.id === e.target.dataset.exId);
+if (!ex) return;
+if (e.target.value === CUSTOM_OPTION) { if (EXERCISE_LIBRARY.includes(ex.name)) ex.name = ''; renderRecord(); lucide.createIcons(); const inp = recordContent.querySelector(`.ex-name-custom[data-ex-id="${ex.id}"]`); if (inp) inp.focus();}
+else { ex.name = e.target.value; renderRecord(); lucide.createIcons();}
+} else if (e.target.matches('#record-date-input')) {
+recordDate = e.target.value;
+}
+});
+changeView('HOME');
+});
+</script>
 </body>
 </html>
