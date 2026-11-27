@@ -25,10 +25,10 @@
     input, textarea, select { font-size: 16px !important; }
     select { -webkit-appearance: none; appearance: none; }
     .pb-dock { padding-bottom: calc(7.5rem + env(safe-area-inset-bottom)); }
-    @keyframes viewIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    .view-enter { animation: viewIn .45s cubic-bezier(.22,1,.36,1) both; }
-    @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-    .view-enter main > * { animation: riseIn .55s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes viewIn { from { opacity: 0; transform: translateX(34px) scale(0.996); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    .view-enter { animation: viewIn .55s cubic-bezier(.19,1,.22,1) both; }
+    @keyframes riseIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    .view-enter main > * { animation: riseIn .65s cubic-bezier(.19,1,.22,1) both; }
     .view-enter main > *:nth-child(2) { animation-delay: .05s; }
     .view-enter main > *:nth-child(3) { animation-delay: .1s; }
     .view-enter main > *:nth-child(4) { animation-delay: .15s; }
@@ -318,7 +318,7 @@
       const currentEl = document.getElementById(`view-${currentView.toLowerCase()}`);
       if (currentEl) {
         currentEl.classList.remove('view-enter'); void currentEl.offsetWidth; currentEl.classList.add('view-enter');
-        setTimeout(() => currentEl.classList.remove('view-enter'), 750);
+        setTimeout(() => currentEl.classList.remove('view-enter'), 1050);
       }
       renderApp();
       window.scrollTo(0, 0);
