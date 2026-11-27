@@ -84,7 +84,7 @@
         <div>
           <p class="text-[11px] font-black tracking-[0.25em] text-[#2e3a5c]">PROGRESS</p>
           <h2 class="text-2xl font-black tracking-tight mt-1">Big3 推定1RMの推移</h2>
-          <p class="text-xs text-neutral-500 mt-1.5">その日の最良セットから算出した推定1RMの移り変わりです。グラフの点をタップすると、その日の記録が開きます。</p>
+          <p class="text-xs text-neutral-500 mt-1.5">その日の最良セットから算出した推定1RMの移り変わりです。グラフの点をタップすると内訳が出て、吹き出しをタップするとその日の記録が開きます。</p>
         </div>
         <div id="trends-list" class="space-y-5"></div>
       </main>
@@ -563,13 +563,15 @@ function liftSeries(name) {
     (log.exercises || []).filter(ex => ex.name === name).forEach(ex => {
       (ex.sets || []).forEach(s => {
         const v = calculate1RM(s.weight, s.reps);
-        if (v > 0) byDate[log.date] = Math.max(byDate[log.date] || 0, v);
+        if (v > 0 && v > (byDate[log.date] ? byDate[log.date].value : 0)) {
+          byDate[log.date] = { date: log.date, value: v, weight: parseFloat(s.weight) || 0, reps: parseInt(s.reps, 10) || 0 };
+        }
       });
     });
   });
-  return Object.keys(byDate).sort().map(d => ({ date: d, value: byDate[d] }));
+  return Object.keys(byDate).sort().map(d => byDate[d]);
 }
-function liftChart(series, color) {
+function liftChart(liftName, series, color) {
   const W = 320, H = 118, P = 16;
   const vals = series.map(p => p.value);
   let min = Math.min(...vals), max = Math.max(...vals);
@@ -583,10 +585,35 @@ function liftChart(series, color) {
     : '';
   const dots = series.map((p, i) => {
     const last = i === series.length - 1;
-    return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="' + (last ? 4.5 : 3) + '" fill="' + (last ? color : '#ffffff') + '" stroke="' + color + '" stroke-width="2"/>';
+    const sel = trendSel && trendSel.lift === liftName && trendSel.date === p.date;
+    return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="' + (sel ? 6 : last ? 4.5 : 3) + '" fill="' + (sel || last ? color : '#ffffff') + '" stroke="' + (sel ? '#17181d' : color) + '" stroke-width="2"/>';
   }).join('');
-  const hits = series.map((p, i) => '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="15" fill="transparent" style="cursor:pointer" onclick="jumpToDay(\'' + p.date + '\')"><title>' + p.date + ' の記録を開く</title></circle>').join('');
-  return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="w-full">' + line + dots + hits + '</svg>';
+  const hits = series.map((p, i) => '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="15" fill="transparent" style="cursor:pointer" onclick="selectTrendPoint(\'' + liftName + '\', \'' + p.date + '\')"><title>' + p.date + ' の内訳</title></circle>').join('');
+  let callout = '';
+  if (trendSel && trendSel.lift === liftName) {
+    const si = series.findIndex(p => p.date === trendSel.date);
+    if (si >= 0) {
+      const p = series[si];
+      const leftPct = Math.min(84, Math.max(16, x(si) / W * 100));
+      const below = y(p.value) < 56;
+      const pos = below
+        ? 'top: calc(' + (y(p.value) / H * 100).toFixed(1) + '% + 12px);'
+        : 'bottom: calc(' + ((H - y(p.value)) / H * 100).toFixed(1) + '% + 12px);';
+      const tail = below
+        ? '<span class="absolute left-1/2 -translate-x-1/2 -top-[5px] w-2.5 h-2.5 rotate-45 bg-[#17181d]"></span>'
+        : '<span class="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 rotate-45 bg-[#17181d]"></span>';
+      callout = '<button onclick="jumpToDay(\'' + p.date + '\')" class="absolute z-10 -translate-x-1/2 bg-[#17181d] text-white rounded-xl px-3 py-2 shadow-xl text-left" style="left:' + leftPct + '%; ' + pos + '">' + tail +
+        '<span class="block text-sm font-black whitespace-nowrap tnum">' + p.weight + 'kg × ' + p.reps + '回</span>' +
+        '<span class="block text-[10px] font-bold text-white/60 whitespace-nowrap">推定1RM ' + p.value + 'kg ・ ' + p.date.slice(5).replace('-', '/') + '（タップで開く）</span></button>';
+    }
+  }
+  return '<div class="relative">' + '<svg viewBox="0 0 ' + W + ' ' + H + '" class="w-full">' + line + dots + hits + '</svg>' + callout + '</div>';
+}
+let trendSel = null;
+function selectTrendPoint(lift, date) {
+  if (trendSel && trendSel.lift === lift && trendSel.date === date) trendSel = null;
+  else trendSel = { lift, date };
+  renderTrends();
 }
 function renderTrends() {
   const md = d => d.slice(5).replace('-', '/');
@@ -605,7 +632,7 @@ function renderTrends() {
     return '<section class="glass rounded-[1.75rem] p-5">' + head +
       '<div class="flex items-end justify-between mt-2"><div><span class="text-4xl font-black tracking-tight">' + cur.value + '</span><span class="text-sm font-bold text-neutral-400 ml-1">kg</span><p class="text-[11px] font-bold text-neutral-400 mt-0.5">直近 ' + md(cur.date) + '</p></div>' +
       '<div class="text-right"><p class="text-[11px] font-bold text-neutral-400">最高</p><p class="text-lg font-black">' + best + '<span class="text-xs text-neutral-400 ml-0.5">kg</span></p>' + deltaHtml + '</div></div>' +
-      liftChart(series, lift.color) +
+      liftChart(lift.name, series, lift.color) +
       '<div class="flex justify-between text-[10px] font-bold text-neutral-400 -mt-1"><span>' + md(series[0].date) + '</span><span>' + md(cur.date) + '</span></div>' +
       '</section>';
   }).join('');
