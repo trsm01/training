@@ -654,10 +654,30 @@ if (!BIG3_NAMES.includes(name)) return null;
 const max = liftMax1RM(name);
 if (!max) return null;
 const mk = (pct, reps, memo) => ({ id: generateUUID(), weight: roundToPlate(max * pct), reps, memo });
-return [
-mk(0.40, 5, 'アップ'), mk(0.60, 3, 'アップ'), mk(0.75, 2, 'アップ'), mk(0.85, 1, 'アップ'),
-mk(0.875, 3, 'メイン'), mk(0.875, 3, 'メイン'), mk(0.875, 3, 'メイン'), mk(0.875, 3, 'メイン')
-];
+const warmups = [mk(0.40, 5, 'アップ'), mk(0.60, 3, 'アップ'), mk(0.75, 2, 'アップ'), mk(0.85, 1, 'アップ')];
+let mainWeight = roundToPlate(max * 0.875);
+let progressed = false;
+const targetDate = (typeof recordDate !== 'undefined' && recordDate) ? recordDate : getLocalDateStr();
+const candidates = logs.filter(l => l.id !== editingLogId && (l.exercises || []).some(e => e.name === name)).sort((a, b) => new Date(b.date) - new Date(a.date));
+const sameDay = candidates.filter(l => candidates.length && l.date === candidates[0].date);
+const prev = sameDay.find(l => l.exercises.find(e => e.name === name).sets.some(s => (s.memo || '').startsWith('メイン'))) || sameDay[0];
+if (prev) {
+const days = Math.round((new Date(targetDate) - new Date(prev.date)) / 86400000);
+const prevEx = prev.exercises.find(e => e.name === name);
+const mainSets = prevEx.sets.filter(s => (s.memo || '').startsWith('メイン'));
+let completed = false;
+if (mainSets.length) {
+completed = mainSets.length >= 4 && mainSets.every(s => parseInt(s.reps, 10) >= 3);
+} else {
+const topW = Math.max(0, ...prevEx.sets.map(s => parseFloat(s.weight) || 0));
+const topSets = prevEx.sets.filter(s => topW > 0 && parseFloat(s.weight) === topW);
+completed = topSets.length >= 4 && topSets.every(s => parseInt(s.reps, 10) >= 3);
+}
+if (days >= 0 && days <= 7 && completed) progressed = true;
+}
+if (progressed) mainWeight += 2.5;
+const mains = [0, 1, 2, 3].map(i => ({ id: generateUUID(), weight: mainWeight, reps: 3, memo: (i === 0 && progressed) ? 'メイン+2.5' : 'メイン' }));
+return [...warmups, ...mains];
 }
 function applyTemplate(exId) {
 const ex = exercises.find(e => e.id === exId);
