@@ -654,7 +654,7 @@ if (!BIG3_NAMES.includes(name)) return null;
 const max = liftMax1RM(name);
 if (!max) return null;
 const mk = (pct, reps, memo) => ({ id: generateUUID(), weight: roundToPlate(max * pct), reps, memo });
-const warmups = [mk(0.40, 5, 'アップ'), mk(0.60, 3, 'アップ'), mk(0.75, 2, 'アップ'), mk(0.85, 1, 'アップ')];
+const warmups = [mk(0.40, 5, 'アップ'), mk(0.60, 3, 'アップ'), mk(0.75, 2, 'アップ'), mk(0.85, 1, '1RM確認')];
 let mainWeight = roundToPlate(max * 0.875);
 let progressed = false;
 let progressedFrom = 0;
@@ -729,6 +729,19 @@ function removeExercise(exId) { exercises = exercises.filter(ex => ex.id!== exId
 function addSet(exId) { const ex = exercises.find(e => e.id === exId); if (ex) { ex.sets.push(createEmptySet()); renderRecord(); lucide.createIcons();}}
 function removeSet(exId, setId) { const ex = exercises.find(e => e.id === exId); if (ex) { ex.sets = ex.sets.filter(s => s.id!== setId); renderRecord(); lucide.createIcons();}}
 
+function setGroupOf(set) {
+const m = set.memo || '';
+if (m.startsWith('アップ')) return { key: 'up', label: 'アップ', color: '#8a8a93', tint: 'rgba(24,24,32,0.03)' };
+if (m.startsWith('1RM')) return { key: 'rm', label: 'クラスター前の1RM', color: '#2e3a5c', tint: 'rgba(46,58,92,0.07)' };
+if (m.startsWith('メイン')) {
+const mm = m.match(/メイン(?:\+2\.5)?\s*(\d)/);
+if (mm) return mm[1] === '1'
+? { key: 'm1', label: 'クラスターセット ①', color: '#a85b32', tint: 'rgba(168,91,50,0.06)' }
+: { key: 'm2', label: 'クラスターセット ②', color: '#6b7c5e', tint: 'rgba(107,124,94,0.07)' };
+return { key: 'm', label: 'メイン', color: '#a85b32', tint: 'rgba(168,91,50,0.06)' };
+}
+return null;
+}
 function renderRecord() {
 document.getElementById('record-view-title').textContent = editingLogId? '記録を編集': '記録する';
 const content = document.getElementById('record-content');
@@ -742,15 +755,24 @@ let html = `
 
 exercises.forEach(ex => {
 const isCustom = ex.name &&!EXERCISE_LIBRARY.includes(ex.name);
-const setsHtml = ex.sets.map((set, i) => `
-<div class="flex items-center gap-2 bg-[#f7f6f2] p-2 rounded-2xl border border-neutral-900/[0.06]">
+let lastGroupKey = null;
+const setsHtml = ex.sets.map((set, i) => {
+const g = setGroupOf(set);
+let header = '';
+if (g && g.key !== lastGroupKey) {
+header = `<div class="flex items-center gap-2 pt-2 pb-0.5"><span class="w-2 h-2 rounded-full shrink-0" style="background:${g.color}"></span><span class="text-[11px] font-black tracking-wider" style="color:${g.color}">${g.label}</span><span class="flex-1 h-px bg-neutral-900/[0.06]"></span></div>`;
+}
+lastGroupKey = g ? g.key : lastGroupKey;
+return header + `
+<div class="flex items-center gap-2 p-2 rounded-2xl border border-neutral-900/[0.06]" style="background:${g ? g.tint : '#f7f6f2'}; border-left: 3px solid ${g ? g.color : 'rgba(24,24,32,0.12)'}">
 <div class="w-6 text-center font-black text-neutral-500 text-sm tnum shrink-0">${i + 1}</div>
 <input type="number" inputmode="decimal" placeholder="kg" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="weight" value="${escapeHtml(set.weight)}" class="update-set w-[4.2rem] sm:w-20 p-2.5 text-center font-black bg-neutral-900/[0.04] border border-neutral-900/[0.09] rounded-xl focus:ring-2 focus:ring-[#2e3a5c]/40 shrink-0" />
 <input type="number" inputmode="numeric" placeholder="回" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="reps" value="${escapeHtml(set.reps)}" class="update-set w-[3.6rem] sm:w-[4.5rem] p-2.5 text-center font-black bg-neutral-900/[0.04] border border-neutral-900/[0.09] rounded-xl focus:ring-2 focus:ring-[#2e3a5c]/40 shrink-0" />
 <div id="1rm-${set.id}" class="w-11 text-center font-black text-[#2e3a5c] shrink-0 text-xs tnum">${calculate1RM(set.weight, set.reps) || '—'}</div>
 <input type="text" placeholder="メモ" data-ex-id="${ex.id}" data-set-id="${set.id}" data-field="memo" value="${escapeHtml(set.memo)}" class="update-set flex-1 p-2.5 bg-neutral-900/[0.04] border border-neutral-900/[0.09] rounded-xl focus:ring-2 focus:ring-[#2e3a5c]/40 text-sm min-w-[52px]" />
 <button onclick="removeSet('${ex.id}', '${set.id}')" class="p-1 text-neutral-500 hover:text-red-400 shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
-</div>`).join('');
+</div>`;
+}).join('');
 html += `
 <div class="glass rounded-[1.75rem] p-4 sm:p-5 space-y-3.5">
 <div class="flex items-center gap-2">
