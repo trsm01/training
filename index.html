@@ -689,9 +689,9 @@ const mains = [];
 for (let s = 1; s <= 2; s++) {
 for (let c = 1; c <= 4; c++) {
 let memo = 'メイン' + s + '-' + c;
-if (c < 4) memo += '（30秒）';
+if (c < 4) memo += '（20秒）';
 else if (s === 1) memo += '（5分）';
-if (s === 1 && c === 1 && progressed) memo = 'メイン+2.5 ' + s + '-' + c + '（30秒）';
+if (s === 1 && c === 1 && progressed) memo = 'メイン+2.5 ' + s + '-' + c + '（20秒）';
 mains.push({ id: generateUUID(), weight: mainWeight, reps: 3, memo });
 }
 }
